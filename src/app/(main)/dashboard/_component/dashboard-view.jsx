@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -16,6 +16,7 @@ import {
   TrendingUp,
   TrendingDown,
   Brain,
+  Bot,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -27,8 +28,12 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import Chatbot from "@/components/chatbot";
 
 const DashboardView = ({ insights }) => {
+  const [chatbotOpen, setChatbotOpen] = useState(false);
+
   // Transform salary data for the chart
   const salaryData = insights.salaryRanges.map((range) => ({
     name: range.role,
@@ -74,10 +79,11 @@ const DashboardView = ({ insights }) => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Badge variant="outline">Last updated: {lastUpdatedDate}</Badge>
-      </div>
+    <>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Badge variant="outline">Last updated: {lastUpdatedDate}</Badge>
+        </div>
 
       {/* Market Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -221,7 +227,20 @@ const DashboardView = ({ insights }) => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+
+      {/* Floating Chatbot Button */}
+      <Button
+        onClick={() => setChatbotOpen(true)}
+        size="icon"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow z-50"
+      >
+        <Bot className="h-6 w-6" />
+      </Button>
+
+      {/* Chatbot Dialog */}
+      <Chatbot open={chatbotOpen} onOpenChange={setChatbotOpen} />
+    </>
   );
 };
 
