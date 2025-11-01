@@ -27,6 +27,8 @@ model User {
   assessments   Assessment[]
   resume        Resume?
   coverLetter   CoverLetter[]
+  scheduledCalls ScheduledCall[]
+  callLogs      CallLog[]
 }
 
 model Assessment {
@@ -96,4 +98,45 @@ model IndustryInsight {
   nextUpdate    DateTime  // Scheduled update time
 
   @@index([industry])
+}
+
+model ScheduledCall {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  phoneNumber   String    // Recipient phone number
+  scheduledTime DateTime  // When the call should be made
+  recipientName String?   // Optional name of recipient
+  status        String    @default("scheduled") // scheduled, completed, failed, cancelled
+  inngestEventId String?  // Inngest event ID for tracking
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  callLog       CallLog?
+
+  @@index([userId])
+  @@index([scheduledTime])
+  @@index([status])
+}
+
+model CallLog {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  scheduledCallId String?   @unique
+  scheduledCall   ScheduledCall? @relation(fields: [scheduledCallId], references: [id])
+  phoneNumber     String    // Recipient phone number
+  recipientName   String?
+  status          String    // completed, failed, no_answer, busy, cancelled
+  duration        Int?      // Duration in seconds
+  startedAt       DateTime?
+  endedAt         DateTime?
+  recordingUrl    String?   // URL to call recording if available
+  transcript      String?   // Call transcript if available
+  errorMessage    String?   // Error message if call failed
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
