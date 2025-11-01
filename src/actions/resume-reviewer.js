@@ -10,25 +10,33 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * Comprehensive resume review function that analyzes the resume
  * and provides detailed feedback, enhancements, and suggestions
  */
-export async function reviewResume() {
+export async function reviewResume(resumeId) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
     include: {
-      resume: true,
       industryInsight: true,
     },
   });
 
   if (!user) throw new Error("User not found");
 
-  if (!user.resume || !user.resume.content) {
+  // Get the specific resume
+  const resume = await db.resume.findFirst({
+    where: {
+      id: resumeId || undefined,
+      userId: user.id,
+    },
+    orderBy: resumeId ? undefined : { updatedAt: "desc" },
+  });
+
+  if (!resume || !resume.content) {
     throw new Error("No resume found. Please create a resume first.");
   }
 
-  const resumeContent = user.resume.content;
+  const resumeContent = resume.content;
   const industry = user.industry || "General";
   const experience = user.experience || 0;
   const skills = user.skills || [];
@@ -148,11 +156,21 @@ Provide actionable, specific feedback that the user can implement immediately.`;
     // Update resume with ATS score and feedback
     await db.resume.update({
       where: {
-        userId: user.id,
+        id: resume.id,
       },
       data: {
         atsScore: reviewData.atsScore || null,
         feedback: JSON.stringify(reviewData),
+      },
+    });
+
+    // Save the review to ResumeReview table
+    await db.resumeReview.create({
+      data: {
+        userId: user.id,
+        resumeId: resume.id,
+        reviewType: "saved",
+        reviewData: reviewData,
       },
     });
 
@@ -210,7 +228,7 @@ Return ONLY the enhanced ${sectionName} content, no explanations or additional t
 /**
  * Review uploaded resume content (for file uploads)
  */
-export async function reviewUploadedResume(resumeContent) {
+export async function reviewUploadedResume(resumeContent, fileName) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -343,6 +361,16 @@ Provide actionable, specific feedback that the user can implement immediately.`;
       };
     }
 
+    // Save the review to ResumeReview table
+    await db.resumeReview.create({
+      data: {
+        userId: user.id,
+        reviewType: "uploaded",
+        reviewData: reviewData,
+        fileName: fileName || null,
+      },
+    });
+
     return reviewData;
   } catch (error) {
     console.error("Error reviewing uploaded resume:", error);
@@ -353,7 +381,7 @@ Provide actionable, specific feedback that the user can implement immediately.`;
 /**
  * Get resume review history/previous feedback
  */
-export async function getResumeReview() {
+export async function getResumeReview(reviewId, reviewType) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -363,21 +391,146 @@ export async function getResumeReview() {
 
   if (!user) throw new Error("User not found");
 
-  const resume = await db.resume.findUnique({
+  if (reviewId) {
+    const review = await db.resumeReview.findFirst({
+      where: {
+        id: reviewId,
+        userId: user.id,
+      },
+    });
+
+    if (review) {
+      return review.reviewData;
+    }
+  }
+
+  // Get the most recent review
+  const review = await db.resumeReview.findFirst({
     where: {
+      userId: user.id,
+      reviewType: reviewType || undefined,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (review) {
+    return review.reviewData;
+  }
+
+  return null;
+}
+
+/**
+ * Get all resume reviews for a user
+ */
+export async function getAllResumeReviews(reviewType) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  return await db.resumeReview.findMany({
+    where: {
+      userId: user.id,
+      reviewType: reviewType || undefined,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      resume: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Save a review (for downloading later)
+ */
+export async function saveReview(reviewData, reviewType, fileName, resumeId) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const review = await db.resumeReview.create({
+    data: {
+      userId: user.id,
+      resumeId: resumeId || null,
+      reviewType: reviewType || "uploaded",
+      reviewData: reviewData,
+      fileName: fileName || null,
+    },
+  });
+
+  return review;
+}
+
+/**
+ * Delete a saved review
+ */
+export async function deleteReview(reviewId) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  await db.resumeReview.delete({
+    where: {
+      id: reviewId,
       userId: user.id,
     },
   });
 
-  if (!resume || !resume.feedback) {
-    return null;
-  }
+  return { success: true };
+}
 
-  try {
-    return JSON.parse(resume.feedback);
-  } catch (error) {
-    console.error("Error parsing feedback:", error);
-    return null;
-  }
+/**
+ * Get a specific review by ID
+ */
+export async function getReviewById(reviewId) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const review = await db.resumeReview.findFirst({
+    where: {
+      id: reviewId,
+      userId: user.id,
+    },
+    include: {
+      resume: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+  });
+
+  return review;
 }
 

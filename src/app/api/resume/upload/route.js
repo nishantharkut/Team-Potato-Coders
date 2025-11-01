@@ -84,7 +84,7 @@ export async function POST(req) {
           const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
           const response = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4o-mini",
             messages: [
               {
                 role: "user",
@@ -134,7 +134,7 @@ export async function POST(req) {
           const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
           const response = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4o-mini",
             messages: [
               {
                 role: "user",

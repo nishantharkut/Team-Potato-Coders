@@ -13,6 +13,12 @@ import {
   RefreshCw,
   Upload,
   X,
+  Download,
+  Save,
+  Trash2,
+  ChevronDown,
+  FolderOpen,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -25,8 +31,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { reviewUploadedResume } from "@/actions/resume-reviewer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { reviewUploadedResume, getAllResumeReviews, getReviewById, deleteReview } from "@/actions/resume-reviewer";
+import { getAllResumes } from "@/actions/resume";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 export default function ResumeReviewTab({
   previewContent,
@@ -37,33 +58,87 @@ export default function ResumeReviewTab({
 }) {
   const [hasContent, setHasContent] = useState(false);
   const [reviewMode, setReviewMode] = useState("saved"); // "saved" or "upload"
+  
+  // Separate state for saved and uploaded reviews
+  const [savedReviewData, setSavedReviewData] = useState(null);
+  const [uploadedReviewData, setUploadedReviewData] = useState(null);
+  const [currentReviewType, setCurrentReviewType] = useState(null); // "saved" or "uploaded"
+  
+  // Saved resumes management
+  const [savedResumes, setSavedResumes] = useState([]);
+  const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [isLoadingResumes, setIsLoadingResumes] = useState(false);
+  
+  // Saved reviews management
+  const [savedReviews, setSavedReviews] = useState([]);
+  const [uploadedReviews, setUploadedReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  
+  // Upload state
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
-  const [internalReviewData, setInternalReviewData] = useState(externalReviewData);
-  const [internalIsReviewing, setInternalIsReviewing] = useState(false);
-
-  // Use external data when available, otherwise use internal state
-  const reviewData = externalReviewData || internalReviewData;
-  const isReviewing = externalIsReviewing || internalIsReviewing || isUploading;
+  
+  const isReviewing = externalIsReviewing || isUploading;
+  
+  // Determine which review data to show
+  const reviewData = currentReviewType === "saved" ? savedReviewData : uploadedReviewData;
 
   useEffect(() => {
     setHasContent(!!previewContent && previewContent.trim().length > 0);
   }, [previewContent]);
 
   useEffect(() => {
-    // Sync external review data with internal state
+    // Sync external review data (from saved resume review)
     if (externalReviewData) {
-      setInternalReviewData(externalReviewData);
+      setSavedReviewData(externalReviewData);
+      setCurrentReviewType("saved");
     }
   }, [externalReviewData]);
+
+  // Load saved resumes
+  useEffect(() => {
+    loadSavedResumes();
+    loadSavedReviews();
+  }, []);
+
+  const loadSavedResumes = async () => {
+    setIsLoadingResumes(true);
+    try {
+      const resumes = await getAllResumes();
+      setSavedResumes(resumes);
+      if (resumes.length > 0 && !selectedResumeId) {
+        setSelectedResumeId(resumes[0].id);
+      }
+    } catch (error) {
+      console.error("Error loading resumes:", error);
+      toast.error("Failed to load saved resumes");
+    } finally {
+      setIsLoadingResumes(false);
+    }
+  };
+
+  const loadSavedReviews = async () => {
+    setIsLoadingReviews(true);
+    try {
+      const [saved, uploaded] = await Promise.all([
+        getAllResumeReviews("saved"),
+        getAllResumeReviews("uploaded"),
+      ]);
+      setSavedReviews(saved || []);
+      setUploadedReviews(uploaded || []);
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
 
   const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const fileName = file.name.toLowerCase();
     const validExtensions = [".pdf", ".txt", ".doc", ".docx"];
     const isValid = validExtensions.some((ext) => fileName.endsWith(ext));
@@ -73,7 +148,6 @@ export default function ResumeReviewTab({
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be less than 5MB");
       return;
@@ -98,7 +172,6 @@ export default function ResumeReviewTab({
     setIsExtracting(true);
 
     try {
-      // Upload file and extract text
       const formData = new FormData();
       formData.append("file", uploadedFile);
 
@@ -119,20 +192,76 @@ export default function ResumeReviewTab({
       }
 
       setIsExtracting(false);
-      setInternalIsReviewing(true);
 
       // Review the extracted content
-      const review = await reviewUploadedResume(content);
-      setInternalReviewData(review);
+      const review = await reviewUploadedResume(content, uploadedFileName);
+      setUploadedReviewData(review);
+      setCurrentReviewType("uploaded");
       toast.success("Resume reviewed successfully!");
+      
+      // Reload reviews list
+      await loadSavedReviews();
     } catch (error) {
       console.error("Upload and review error:", error);
       toast.error(error.message || "Failed to upload and review resume");
     } finally {
       setIsUploading(false);
       setIsExtracting(false);
-      setInternalIsReviewing(false);
     }
+  };
+
+  const handleLoadReview = async (reviewId, type) => {
+    try {
+      const reviewRecord = await getReviewById(reviewId);
+      if (reviewRecord) {
+        const data = reviewRecord.reviewData;
+        if (type === "saved") {
+          setSavedReviewData(data);
+          setCurrentReviewType("saved");
+        } else {
+          setUploadedReviewData(data);
+          setCurrentReviewType("uploaded");
+        }
+        toast.success("Review loaded successfully!");
+      }
+    } catch (error) {
+      console.error("Error loading review:", error);
+      toast.error("Failed to load review");
+    }
+  };
+
+  const handleDeleteReview = async (reviewId, type) => {
+    try {
+      await deleteReview(reviewId);
+      toast.success("Review deleted successfully");
+      
+      // Reload reviews
+      await loadSavedReviews();
+      
+      // Clear if this was the current review
+      if (type === "saved" && savedReviewData) {
+        setSavedReviewData(null);
+      } else if (type === "uploaded" && uploadedReviewData) {
+        setUploadedReviewData(null);
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast.error("Failed to delete review");
+    }
+  };
+
+  const handleDownloadReview = (review, fileName) => {
+    const dataStr = JSON.stringify(review, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName || "resume-review"}_${format(new Date(), "yyyy-MM-dd")}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Review downloaded successfully!");
   };
 
   const getScoreColor = (score) => {
@@ -145,12 +274,6 @@ export default function ResumeReviewTab({
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
     return "destructive";
-  };
-
-  const getPriorityColor = (priority) => {
-    if (priority === "high") return "text-red-500";
-    if (priority === "medium") return "text-yellow-500";
-    return "text-blue-500";
   };
 
   return (
@@ -169,51 +292,131 @@ export default function ResumeReviewTab({
         </TabsList>
 
         <TabsContent value="saved" className="space-y-6">
-          {!hasContent ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-12">
-                  <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Resume Content</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Please create and save your resume first before reviewing it, or use the
-                    "Upload & Review" tab to review an existing resume file.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <div className="text-sm text-muted-foreground">
-                  Review your saved resume on UpRoot
-                </div>
+          {/* Saved Resumes Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5" />
+                Select Resume to Review
+              </CardTitle>
+              <CardDescription>
+                Choose from your saved resumes or review the current one
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Select
+                  value={selectedResumeId || ""}
+                  onValueChange={setSelectedResumeId}
+                  disabled={isLoadingResumes || isReviewing}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a resume" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedResumes.map((resume) => (
+                      <SelectItem key={resume.id} value={resume.id}>
+                        {resume.title} ({format(new Date(resume.updatedAt), "MMM d, yyyy")})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={async () => {
+                    if (selectedResumeId && onReview) {
+                      // Trigger review for selected resume
+                      await onReview(selectedResumeId);
+                    }
+                  }}
+                  disabled={!selectedResumeId || isReviewing || isLoadingResumes}
+                >
+                  {isReviewing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Reviewing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Review Selected
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {hasContent && (
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={onLoadPrevious}
-                    disabled={isReviewing || isUploading}
+                    onClick={onReview}
+                    disabled={isReviewing}
+                    className="flex-1"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Load Previous
-                  </Button>
-                  <Button onClick={onReview} disabled={isReviewing || isUploading}>
-                    {isReviewing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Reviewing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Review Resume
-                      </>
-                    )}
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Review Current Resume
                   </Button>
                 </div>
-              </div>
-            </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Previous Saved Reviews */}
+          {savedReviews.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Previous Saved Reviews
+                </CardTitle>
+                <CardDescription>
+                  View and manage your previous resume reviews
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {savedReviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {review.resume?.title || "Resume Review"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(review.createdAt), "MMM d, yyyy 'at' h:mm a")} • Overall: {(review.reviewData && typeof review.reviewData === 'object' ? review.reviewData.overallScore : null) || "N/A"}/100
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLoadReview(review.id, "saved")}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadReview(review.reviewData, review.resume?.title || "review")}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteReview(review.id, "saved")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
@@ -304,14 +507,93 @@ export default function ResumeReviewTab({
               )}
             </CardContent>
           </Card>
+
+          {/* Previous Uploaded Reviews */}
+          {uploadedReviews.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Previous Uploaded Reviews
+                </CardTitle>
+                <CardDescription>
+                  View and manage your previous uploaded resume reviews
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {uploadedReviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {review.fileName || "Uploaded Resume"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(review.createdAt), "MMM d, yyyy 'at' h:mm a")} • Overall: {(review.reviewData && typeof review.reviewData === 'object' ? review.reviewData.overallScore : null) || "N/A"}/100
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLoadReview(review.id, "uploaded")}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadReview(review.reviewData, review.fileName || "uploaded-review")}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteReview(review.id, "uploaded")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
       {/* Review Results - shown for both modes */}
-
-      {/* Review Results */}
-      {reviewData ? (
+      {reviewData && (
         <div className="space-y-6">
+          {/* Action Bar */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    {currentReviewType === "saved" ? "Saved Resume Review" : "Uploaded Resume Review"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDownloadReview(reviewData, currentReviewType === "saved" ? "saved-review" : uploadedFileName || "uploaded-review")}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Review
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Scores Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
@@ -537,34 +819,7 @@ export default function ResumeReviewTab({
             </Card>
           )}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Sparkles className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Ready to Review</h3>
-              <p className="text-muted-foreground mb-6">
-                Click the "Review Resume" button to get AI-powered feedback and suggestions
-                for improving your resume.
-              </p>
-              <Button onClick={onReview} disabled={isReviewing}>
-                {isReviewing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Reviewing...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Start Review
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   );
 }
-

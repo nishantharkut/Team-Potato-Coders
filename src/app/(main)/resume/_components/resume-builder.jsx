@@ -543,16 +543,23 @@ export default function ResumeBuilder({ initialContent }) {
               previewContent={previewContent || initialContent}
               reviewData={reviewData}
               isReviewing={isReviewing}
-              onReview={async () => {
+              onReview={async (resumeId) => {
                 setIsReviewing(true);
                 try {
-                  // First save the current resume if it's been modified
-                  if (previewContent && previewContent !== initialContent) {
-                    await saveResumeFn(previewContent);
+                  // If resumeId is provided, review that resume
+                  // Otherwise, save current resume and review it
+                  if (resumeId) {
+                    const review = await reviewResume(resumeId);
+                    setReviewData(review);
+                  } else {
+                    // First save the current resume if it's been modified
+                    if (previewContent && previewContent !== initialContent) {
+                      await saveResumeFn(previewContent);
+                    }
+                    // Then review it (no ID means review most recent)
+                    const review = await reviewResume();
+                    setReviewData(review);
                   }
-                  // Then review it
-                  const review = await reviewResume();
-                  setReviewData(review);
                   toast.success("Resume reviewed successfully!");
                 } catch (error) {
                   console.error("Review error:", error);

@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function saveResume(content) {
+export async function saveResume(content, title, resumeId) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -18,18 +18,25 @@ export async function saveResume(content) {
   if (!user) throw new Error("User not found");
 
   try {
-    const resume = await db.resume.upsert({
-      where: {
-        userId: user.id,
-      },
-      update: {
-        content,
-      },
-      create: {
-        userId: user.id,
-        content,
-      },
-    });
+    const resumeData = {
+      userId: user.id,
+      content,
+      title: title || "My Resume",
+    };
+
+    let resume;
+    if (resumeId) {
+      // Update existing resume
+      resume = await db.resume.update({
+        where: { id: resumeId },
+        data: resumeData,
+      });
+    } else {
+      // Create new resume
+      resume = await db.resume.create({
+        data: resumeData,
+      });
+    }
 
     revalidatePath("/resume");
     return resume;
@@ -39,7 +46,7 @@ export async function saveResume(content) {
   }
 }
 
-export async function getResume() {
+export async function getResume(resumeId) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -49,11 +56,70 @@ export async function getResume() {
 
   if (!user) throw new Error("User not found");
 
-  return await db.resume.findUnique({
+  if (resumeId) {
+    return await db.resume.findFirst({
+      where: {
+        id: resumeId,
+        userId: user.id,
+      },
+    });
+  }
+
+  // Return the most recently updated resume if no ID specified
+  return await db.resume.findFirst({
     where: {
       userId: user.id,
     },
+    orderBy: {
+      updatedAt: "desc",
+    },
   });
+}
+
+export async function getAllResumes() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  return await db.resume.findMany({
+    where: {
+      userId: user.id,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+}
+
+export async function deleteResume(resumeId) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  try {
+    await db.resume.delete({
+      where: {
+        id: resumeId,
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/resume");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting resume:", error);
+    throw new Error("Failed to delete resume");
+  }
 }
 
 export async function improveWithAI({ current, type }) {

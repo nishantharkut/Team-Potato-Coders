@@ -25,7 +25,8 @@ model User {
   // Relations
   skills        String[]  // Array of skills
   assessments   Assessment[]
-  resume        Resume?
+  resumes       Resume[]
+  resumeReviews ResumeReview[]
   coverLetter   CoverLetter[]
 }
 
@@ -45,13 +46,34 @@ model Assessment {
 
 model Resume {
   id          String    @id @default(cuid())
-  userId      String    @unique    // One resume per user
+  userId      String
   user        User      @relation(fields: [userId], references: [id])
+  title       String    @default("My Resume") // Name/title for the resume
   content     String    @db.Text // Markdown content
   atsScore    Float?
   feedback    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  
+  reviews     ResumeReview[]
+
+  @@index([userId])
+}
+
+model ResumeReview {
+  id          String    @id @default(cuid())
+  resumeId   String?
+  resume      Resume?   @relation(fields: [resumeId], references: [id], onDelete: CASCADE)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: CASCADE)
+  reviewType  String    @default("saved") // "saved" or "uploaded"
+  reviewData  Json      // The full review JSON data
+  fileName    String?   // For uploaded reviews
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([resumeId])
 }
 
 model CoverLetter {
