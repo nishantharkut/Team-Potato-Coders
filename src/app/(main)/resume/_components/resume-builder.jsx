@@ -16,6 +16,7 @@ import {
   Briefcase,
   GraduationCap,
   Rocket,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import MDEditor from "@uiw/react-md-editor";
@@ -24,7 +25,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { saveResume } from "@/actions/resume";
+import { reviewResume, getResumeReview } from "@/actions/resume-reviewer";
 import { EntryForm } from "./entry-form";
+import ResumeReviewTab from "./resume-review-tab";
 import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
@@ -36,6 +39,8 @@ export default function ResumeBuilder({ initialContent }) {
   const [previewContent, setPreviewContent] = useState(initialContent);
   const { user } = useUser();
   const [resumeMode, setResumeMode] = useState("preview");
+  const [reviewData, setReviewData] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const {
     control,
@@ -208,7 +213,7 @@ export default function ResumeBuilder({ initialContent }) {
       {/* Tabs Section */}
       <div className="bg-white border-4 border-black rounded-xl shadow-neu p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full grid grid-cols-2 h-14">
+          <TabsList className="w-full grid grid-cols-3 h-14">
             <TabsTrigger value="edit" className="text-base font-bold data-[state=active]:shadow-neu-sm">
               <Edit className="h-5 w-5 mr-2" />
               Edit Form
@@ -216,6 +221,10 @@ export default function ResumeBuilder({ initialContent }) {
             <TabsTrigger value="preview" className="text-base font-bold data-[state=active]:shadow-neu-sm">
               <Monitor className="h-5 w-5 mr-2" />
               Preview
+            </TabsTrigger>
+            <TabsTrigger value="review" className="text-base font-bold data-[state=active]:shadow-neu-sm">
+              <Sparkles className="h-5 w-5 mr-2" />
+              Review
             </TabsTrigger>
           </TabsList>
 
@@ -527,6 +536,46 @@ export default function ResumeBuilder({ initialContent }) {
               />
             </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="review" className="space-y-0 mt-6">
+            <ResumeReviewTab
+              previewContent={previewContent || initialContent}
+              reviewData={reviewData}
+              isReviewing={isReviewing}
+              onReview={async () => {
+                setIsReviewing(true);
+                try {
+                  // First save the current resume if it's been modified
+                  if (previewContent && previewContent !== initialContent) {
+                    await saveResumeFn(previewContent);
+                  }
+                  // Then review it
+                  const review = await reviewResume();
+                  setReviewData(review);
+                  toast.success("Resume reviewed successfully!");
+                } catch (error) {
+                  console.error("Review error:", error);
+                  toast.error(error.message || "Failed to review resume");
+                } finally {
+                  setIsReviewing(false);
+                }
+              }}
+              onLoadPrevious={async () => {
+                try {
+                  const previous = await getResumeReview();
+                  if (previous) {
+                    setReviewData(previous);
+                    toast.success("Previous review loaded!");
+                  } else {
+                    toast.info("No previous review found. Please run a new review.");
+                  }
+                } catch (error) {
+                  console.error("Load error:", error);
+                  toast.error("Failed to load previous review");
+                }
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
