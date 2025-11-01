@@ -10,12 +10,21 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Phone, Calendar, Clock, User, Loader2 } from "lucide-react";
+import { Phone, Calendar, Clock, User, Loader2, MessageSquare } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ScheduleCallView() {
   const [callLogs, setCallLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [scheduling, setScheduling] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const {
     register,
@@ -92,19 +101,22 @@ export default function ScheduleCallView() {
   };
 
   const getStatusBadge = (status) => {
+    const statusLower = status?.toLowerCase() || "";
     const variants = {
       completed: "default",
       failed: "destructive",
       scheduled: "secondary",
+      upcoming: "secondary",
       processing: "secondary",
       no_answer: "secondary",
+      noresponse: "secondary",
       busy: "secondary",
       cancelled: "secondary",
     };
 
     return (
-      <Badge variant={variants[status] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ")}
+      <Badge variant={variants[statusLower] || "secondary"}>
+        {status?.charAt(0).toUpperCase() + status?.slice(1).replace(/_/g, " ") || status}
       </Badge>
     );
   };
@@ -114,6 +126,54 @@ export default function ScheduleCallView() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
+  };
+
+  const parseTranscript = (transcript) => {
+    if (!transcript) return [];
+    
+    // Remove leading question mark if present
+    let cleaned = transcript.trim().startsWith("?") 
+      ? transcript.trim().slice(1).trim() 
+      : transcript.trim();
+    
+    // Split by "Agent:" and "User:" to get individual messages
+    const messages = [];
+    const regex = /(Agent|User):\s*(.+?)(?=(Agent|User):|$)/gs;
+    let match;
+    
+    while ((match = regex.exec(cleaned)) !== null) {
+      const role = match[1].toLowerCase();
+      const message = match[2].trim();
+      if (message) {
+        messages.push({ role, message });
+      }
+    }
+    
+    // If regex didn't work, try simpler split by newlines with Agent/User prefixes
+    if (messages.length === 0) {
+      const lines = cleaned.split(/\n+/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("Agent:")) {
+          messages.push({
+            role: "agent",
+            message: trimmed.replace(/^Agent:\s*/i, "").trim(),
+          });
+        } else if (trimmed.startsWith("User:")) {
+          messages.push({
+            role: "user",
+            message: trimmed.replace(/^User:\s*/i, "").trim(),
+          });
+        }
+      }
+    }
+    
+    return messages;
+  };
+
+  const handleViewConversation = (log) => {
+    setSelectedLog(log);
+    setDialogOpen(true);
   };
 
   return (
@@ -263,6 +323,7 @@ export default function ScheduleCallView() {
                       <TableHead>Status</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -279,7 +340,21 @@ export default function ScheduleCallView() {
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
                         <TableCell>{formatDuration(log.duration)}</TableCell>
                         <TableCell>
-                          {format(new Date(log.createdAt), "MMM dd, yyyy HH:mm")}
+                          {log.scheduledTime
+                            ? format(new Date(log.scheduledTime), "MMM dd, yyyy HH:mm")
+                            : format(new Date(log.createdAt), "MMM dd, yyyy HH:mm")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewConversation(log)}
+                            disabled={!log.transcript}
+                            className="h-8 w-8 p-0"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="sr-only">View conversation</span>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -290,6 +365,73 @@ export default function ScheduleCallView() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Conversation Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Call Conversation</DialogTitle>
+            <DialogDescription>
+              {selectedLog?.recipientName && (
+                <>Conversation with {selectedLog.recipientName}</>
+              )}
+              {selectedLog?.phoneNumber && (
+                <span className="block text-xs font-mono mt-1">
+                  {selectedLog.phoneNumber}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedLog?.transcript ? (
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-2">
+                  {parseTranscript(selectedLog.transcript).map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-br-none"
+                            : "bg-muted text-foreground rounded-bl-none"
+                        }`}
+                      >
+                        <div className="text-xs font-semibold mb-1 opacity-80">
+                          {msg.role === "user" ? "User" : "Agent"}
+                        </div>
+                        <div className="text-sm whitespace-pre-wrap break-words">
+                          {msg.message}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground pt-2 border-t">
+                  {selectedLog.duration && (
+                    <div>Duration: {formatDuration(selectedLog.duration)}</div>
+                  )}
+                  {selectedLog.startedAt && (
+                    <div>
+                      Started: {format(new Date(selectedLog.startedAt), "MMM dd, yyyy HH:mm:ss")}
+                    </div>
+                  )}
+                  {selectedLog.endedAt && (
+                    <div>
+                      Ended: {format(new Date(selectedLog.endedAt), "MMM dd, yyyy HH:mm:ss")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No conversation transcript available for this call.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
