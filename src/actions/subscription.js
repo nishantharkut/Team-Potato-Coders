@@ -180,7 +180,7 @@ export async function cancelSubscription() {
 
     revalidatePath("/settings/subscription");
     return updated;
-  } else if (subscription.paymentMethod === "razorpay" || subscription.paymentMethod === "payu" || subscription.paymentMethod === "web3") {
+  } else if (subscription.paymentMethod === "web3") {
     // For Razorpay and Web3 (one-time payments), just mark for cancellation at period end
     const updated = await db.subscription.update({
       where: { id: subscription.id },
@@ -231,7 +231,7 @@ export async function reactivateSubscription() {
 
     revalidatePath("/settings/subscription");
     return updated;
-  } else if (subscription.paymentMethod === "razorpay" || subscription.paymentMethod === "payu" || subscription.paymentMethod === "web3") {
+  } else if (subscription.paymentMethod === "web3") {
     // For Razorpay and Web3, just remove cancellation flag
     const updated = await db.subscription.update({
       where: { id: subscription.id },

@@ -190,7 +190,7 @@ model Subscription {
   updatedAt            DateTime  @updatedAt
   stripeCustomerId     String?
   stripePriceId        String?
-  paymentMethod        String    @default("stripe") // "stripe", "razorpay", "payu", or "web3"
+  paymentMethod        String    @default("stripe") // "stripe" or "web3"
   walletAddress        String?   // Wallet address if payment method is web3
   transactionHash      String?   // Blockchain transaction hash for Web3 payments
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
