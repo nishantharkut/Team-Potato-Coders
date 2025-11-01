@@ -105,27 +105,37 @@ export function EntryForm({ type, entries, onChange }) {
     <div className="space-y-4">
       <div className="space-y-4">
         {entries.map((item, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {item.title} @ {item.organization}
-              </CardTitle>
+          <Card key={index} className="bg-cream/50 hover:bg-cream transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div className="flex-1">
+                <CardTitle className="text-lg font-black text-charcoal mb-1">
+                  {item.title}
+                </CardTitle>
+                <p className="text-base font-bold text-tanjiro-green">
+                  {item.organization}
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="icon"
                 type="button"
                 onClick={() => handleDelete(index)}
+                className="flex-shrink-0"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </Button>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {item.current
-                  ? `${item.startDate} - Present`
-                  : `${item.startDate} - ${item.endDate}`}
-              </p>
-              <p className="mt-2 text-sm whitespace-pre-wrap">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="px-3 py-1 bg-tanjiro-green/10 border-2 border-tanjiro-green rounded-md">
+                  <p className="text-sm font-bold text-tanjiro-green">
+                    {item.current
+                      ? `${item.startDate} - Present`
+                      : `${item.startDate} - ${item.endDate}`}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm md:text-base text-charcoal font-medium whitespace-pre-wrap leading-relaxed">
                 {item.description}
               </p>
             </CardContent>
@@ -134,50 +144,54 @@ export function EntryForm({ type, entries, onChange }) {
       </div>
 
       {isAdding && (
-        <Card>
+        <Card className="bg-cream/30">
           <CardHeader>
-            <CardTitle>Add {type}</CardTitle>
+            <CardTitle className="text-xl font-black text-charcoal">Add New {type}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-charcoal">Title/Position</label>
                 <Input
-                  placeholder="Title/Position"
+                  placeholder="e.g., Software Engineer"
                   {...register("title")}
                   error={errors.title}
                 />
                 {errors.title && (
-                  <p className="text-sm text-red-500">{errors.title.message}</p>
+                  <p className="text-sm text-demon-red font-semibold">{errors.title.message}</p>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-charcoal">Organization/Company</label>
                 <Input
-                  placeholder="Organization/Company"
+                  placeholder="e.g., Google Inc."
                   {...register("organization")}
                   error={errors.organization}
                 />
                 {errors.organization && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.organization.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-charcoal">Start Date</label>
                 <Input
                   type="month"
                   {...register("startDate")}
                   error={errors.startDate}
                 />
                 {errors.startDate && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.startDate.message}
                   </p>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-charcoal">End Date</label>
                 <Input
                   type="month"
                   {...register("endDate")}
@@ -185,17 +199,18 @@ export function EntryForm({ type, entries, onChange }) {
                   error={errors.endDate}
                 />
                 {errors.endDate && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.endDate.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-3 p-4 bg-white border-3 border-black rounded-lg">
               <input
                 type="checkbox"
                 id="current"
+                className="w-5 h-5 border-3 border-black rounded accent-tanjiro-green cursor-pointer"
                 {...register("current")}
                 onChange={(e) => {
                   setValue("current", e.target.checked);
@@ -204,43 +219,52 @@ export function EntryForm({ type, entries, onChange }) {
                   }
                 }}
               />
-              <label htmlFor="current">Current {type}</label>
+              <label htmlFor="current" className="text-base font-bold text-charcoal cursor-pointer">
+                I currently work here
+              </label>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-charcoal">Description</label>
               <Textarea
-                placeholder={`Description of your ${type.toLowerCase()}`}
-                className="h-32"
+                placeholder={`Describe your ${type.toLowerCase()} responsibilities and achievements...`}
+                className="min-h-[140px]"
                 {...register("description")}
                 error={errors.description}
               />
               {errors.description && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.description.message}
                 </p>
               )}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleImproveDescription}
-              disabled={isImproving || !watch("description")}
-            >
-              {isImproving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Improving...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Improve with AI
-                </>
-              )}
-            </Button>
+            
+            <div className="flex items-center gap-2 p-4 bg-tanjiro-green/10 border-2 border-tanjiro-green rounded-lg">
+              <Sparkles className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-charcoal mb-1">AI-Powered Enhancement</p>
+                <p className="text-xs font-medium text-charcoal/70">Let AI improve your description for better impact</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImproveDescription}
+                disabled={isImproving || !watch("description")}
+                className="font-bold"
+              >
+                {isImproving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Improving...
+                  </>
+                ) : (
+                  "Improve"
+                )}
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-end space-x-2">
+          <CardFooter className="flex justify-end gap-3">
             <Button
               type="button"
               variant="outline"
@@ -248,12 +272,13 @@ export function EntryForm({ type, entries, onChange }) {
                 reset();
                 setIsAdding(false);
               }}
+              className="font-bold"
             >
               Cancel
             </Button>
-            <Button type="button" onClick={handleAdd}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Entry
+            <Button type="button" onClick={handleAdd} className="font-bold">
+              <PlusCircle className="h-5 w-5 mr-2" />
+              Add {type}
             </Button>
           </CardFooter>
         </Card>
@@ -261,11 +286,11 @@ export function EntryForm({ type, entries, onChange }) {
 
       {!isAdding && (
         <Button
-          className="w-full"
+          className="w-full h-14 font-bold text-base"
           variant="outline"
           onClick={() => setIsAdding(true)}
         >
-          <PlusCircle className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-5 w-5 mr-2" />
           Add {type}
         </Button>
       )}

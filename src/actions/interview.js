@@ -29,7 +29,9 @@ export async function generateQuiz() {
     
     Each question should be multiple choice with 4 options.
     
-    Return the response in this JSON format only, no additional text:
+    IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no additional text.
+    
+    Format:
     {
       "questions": [
         {
@@ -40,6 +42,8 @@ export async function generateQuiz() {
         }
       ]
     }
+    
+    Return the JSON directly without any formatting or explanation.
   `;
 
   try {
@@ -54,7 +58,8 @@ export async function generateQuiz() {
     return quiz.questions;
   } catch (error) {
     console.error("Error generating quiz:", error);
-    throw new Error("Failed to generate quiz questions");
+    console.error("Raw response:", error.message);
+    throw new Error("Failed to generate quiz questions. Please try again.");
   }
 }
 

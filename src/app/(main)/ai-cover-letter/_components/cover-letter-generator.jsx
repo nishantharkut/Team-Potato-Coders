@@ -59,66 +59,65 @@ export default function CoverLetterGenerator() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-cream">
         <CardHeader>
-          <CardTitle>Job Details</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-black text-charcoal">Job Details</CardTitle>
+          <CardDescription className="text-base font-medium text-charcoal/70">
             Provide information about the position you're applying for
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Form fields remain the same */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="companyName" className="text-sm font-bold text-charcoal">Company Name</Label>
                 <Input
                   id="companyName"
                   placeholder="Enter company name"
                   {...register("companyName")}
                 />
                 {errors.companyName && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.companyName.message}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title</Label>
+              <div className="space-y-3">
+                <Label htmlFor="jobTitle" className="text-sm font-bold text-charcoal">Job Title</Label>
                 <Input
                   id="jobTitle"
                   placeholder="Enter job title"
                   {...register("jobTitle")}
                 />
                 {errors.jobTitle && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.jobTitle.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="jobDescription">Job Description</Label>
+            <div className="space-y-3">
+              <Label htmlFor="jobDescription" className="text-sm font-bold text-charcoal">Job Description</Label>
               <Textarea
                 id="jobDescription"
                 placeholder="Paste the job description here"
-                className="h-32"
+                className="min-h-[160px]"
                 {...register("jobDescription")}
               />
               {errors.jobDescription && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.jobDescription.message}
                 </p>
               )}
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={generating}>
+              <Button type="submit" disabled={generating} className="h-12 px-8 font-bold text-base">
                 {generating ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Generating...
                   </>
                 ) : (
