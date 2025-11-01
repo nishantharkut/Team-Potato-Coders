@@ -21,6 +21,7 @@ import Image from "next/image";
 import { checkUser } from "@/lib/checkUser";
 import { Contact2Icon } from "lucide-react";
 import CustomUserProfileButton from "@/components/custom-user-profile-button";
+import { WalletButton } from "@/components/wallet-button";
 
 export default async function Header() {
   await checkUser();
@@ -38,7 +39,7 @@ export default async function Header() {
               priority
             />
           </div>
-          <span className="logo-font text-2xl md:text-3xl text-tanjiro-green tracking-wider group-hover:text-demon-red transition-colors">
+          <span className="logo-font text-2xl md:text-5xl text-tanjiro-green tracking-wider group-hover:text-demon-red transition-colors">
             UPROOT
           </span>
         </Link>
@@ -114,6 +115,9 @@ export default async function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Wallet Button */}
+            <WalletButton />
 
             {/* User Profile Button */}
             <CustomUserProfileButton />

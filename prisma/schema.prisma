@@ -22,6 +22,10 @@ model User {
   bio           String?
   experience    Int?      // Years of experience
   
+  // Payment
+  stripeCustomerId String?   @unique // Stripe customer ID for Stripe payments
+  walletAddress String?   @unique // Ethereum wallet address for MetaMask payments
+  
   // Relations
   skills        String[]  // Array of skills
   assessments   Assessment[]
@@ -186,12 +190,16 @@ model Subscription {
   updatedAt            DateTime  @updatedAt
   stripeCustomerId     String?
   stripePriceId        String?
+  paymentMethod        String    @default("stripe") // "stripe" or "web3"
+  walletAddress        String?   // Wallet address if payment method is web3
+  transactionHash      String?   // Blockchain transaction hash for Web3 payments
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([stripeSubscriptionId])
   @@index([stripeCustomerId])
   @@index([stripePriceId])
+  @@index([walletAddress])
 }
 
 model UsageTracking {

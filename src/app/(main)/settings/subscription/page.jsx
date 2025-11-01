@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import UsageMeters from "./_components/usage-meters";
+import { WalletConnection } from "@/components/wallet-connection";
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState(null);
@@ -226,6 +227,9 @@ export default function SubscriptionPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Wallet Connection */}
+        <WalletConnection />
 
         {/* Usage Meters */}
         <UsageMeters currentTier={subscription.tier} />

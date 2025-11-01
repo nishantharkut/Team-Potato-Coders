@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
-import { User } from "lucide-react";
+import { User, Wallet, Check, X, ExternalLink } from "lucide-react";
+import { useWeb3 } from "@/hooks/useWeb3";
+import { formatAddress } from "@/lib/web3";
+import Link from "next/link";
 
 export default function CustomUserProfileButton() {
   const userButtonRef = useRef(null);
