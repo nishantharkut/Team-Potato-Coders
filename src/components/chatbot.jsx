@@ -100,7 +100,7 @@ const Chatbot = ({ open, onOpenChange }) => {
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />
-            Sensai AI Assistant
+            Uproot AI Assistant
           </DialogTitle>
         </DialogHeader>
 

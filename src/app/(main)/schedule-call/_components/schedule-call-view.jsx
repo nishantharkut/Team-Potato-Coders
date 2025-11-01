@@ -143,17 +143,21 @@ export default function ScheduleCallView() {
                 <Label htmlFor="phoneNumber">
                   Phone Number <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="phoneNumber"
-                  placeholder="+1234567890"
-                  {...register("phoneNumber", {
-                    required: "Phone number is required",
-                    pattern: {
-                      value: /^\+?[1-9]\d{1,14}$/,
-                      message: "Please enter a valid phone number",
-                    },
-                  })}
-                />
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
+                  <Input
+                    id="phoneNumber"
+                    placeholder="+1234567890"
+                    className="pl-11"
+                    {...register("phoneNumber", {
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^\+?[1-9]\d{1,14}$/,
+                        message: "Please enter a valid phone number",
+                      },
+                    })}
+                  />
+                </div>
                 {errors.phoneNumber && (
                   <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
                 )}
@@ -161,11 +165,15 @@ export default function ScheduleCallView() {
 
               <div className="space-y-2">
                 <Label htmlFor="recipientName">Recipient Name (Optional)</Label>
-                <Input
-                  id="recipientName"
-                  placeholder="John Doe"
-                  {...register("recipientName")}
-                />
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
+                  <Input
+                    id="recipientName"
+                    placeholder="John Doe"
+                    className="pl-11"
+                    {...register("recipientName")}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -173,14 +181,18 @@ export default function ScheduleCallView() {
                   <Label htmlFor="scheduledDate">
                     Date <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="scheduledDate"
-                    type="date"
-                    {...register("scheduledDate", {
-                      required: "Date is required",
-                    })}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
+                    <Input
+                      id="scheduledDate"
+                      type="date"
+                      className="pl-11 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit-fields-wrapper]:pl-0"
+                      {...register("scheduledDate", {
+                        required: "Date is required",
+                      })}
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                  </div>
                   {errors.scheduledDate && (
                     <p className="text-sm text-red-500">{errors.scheduledDate.message}</p>
                   )}
@@ -190,13 +202,17 @@ export default function ScheduleCallView() {
                   <Label htmlFor="scheduledTime">
                     Time <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="scheduledTime"
-                    type="time"
-                    {...register("scheduledTime", {
-                      required: "Time is required",
-                    })}
-                  />
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
+                    <Input
+                      id="scheduledTime"
+                      type="time"
+                      className="pl-11 [&::-webkit-calendar-picker-indicator]:opacity-0"
+                      {...register("scheduledTime", {
+                        required: "Time is required",
+                      })}
+                    />
+                  </div>
                   {errors.scheduledTime && (
                     <p className="text-sm text-red-500">{errors.scheduledTime.message}</p>
                   )}
