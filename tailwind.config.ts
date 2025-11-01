@@ -21,52 +21,53 @@ export default {
 
   	extend: {
   		colors: {
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
-  			},
-  			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
-  			},
-  			primary: {
-  				DEFAULT: '#036db0',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			}
+  			// Using CSS variables for theme support
+  			background: 'var(--color-bg-start)',
+  			foreground: 'var(--color-text)',
+  			surface: 'var(--color-surface)',
+  			'surface-hover': 'var(--color-surface-hover)',
+  			'surface-elevated': 'var(--color-surface-elevated)',
+  			accent: 'var(--color-accent)',
+  			'accent-hover': 'var(--color-accent-hover)',
+  			'accent-light': 'var(--color-accent-light)',
+  			'accent-dark': 'var(--color-accent-dark)',
+  			secondary: 'var(--color-secondary)',
+  			'secondary-hover': 'var(--color-secondary-hover)',
+  			tertiary: 'var(--color-tertiary)',
+  			border: 'var(--color-border)',
+  			'border-hover': 'var(--color-border-hover)',
+  			'text-secondary': 'var(--color-text-secondary)',
+  			'text-muted': 'var(--color-text-muted)',
+  			'button-text': 'var(--color-button-text)',
+  			// Keep specific color names for easy reference
+  			'tanjiro-green': '#1a4d2e',
+  			'demon-red': '#c1121f',
+  			'earthy-orange': '#f77f00',
+  			'zenitsu-yellow': '#fcbf49',
+  			'nezuko-pink': '#ffb3c1',
+  			'charcoal': '#1b1b1b',
+  			'cream': '#faf9f6',
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: '1rem',
+  			md: '0.75rem',
+  			sm: '0.5rem',
+  			xl: '1.5rem'
   		},
+  		borderWidth: {
+  			'3': '3px',
+  		},
+  		fontFamily: {
+  			'bangers': ['Bangers', 'cursive'],
+  			'roboto': ['Roboto', 'sans-serif']
+  		},
+		boxShadow: {
+			'neu': '4px 4px 0px 0px var(--shadow-neubrutalism)',
+			'neu-sm': '2px 2px 0px 0px var(--shadow-neubrutalism-small)',
+			'neu-lg': '6px 6px 0px 0px var(--shadow-neubrutalism)',
+			'neu-hover': '2px 2px 0px 0px var(--shadow-neubrutalism-hover)',
+			'neu-inset': 'inset 2px 2px 0px 0px var(--shadow-neubrutalism-hover)'
+		},
   		keyframes: {
   			'accordion-down': {
   				from: {

@@ -5,8 +5,10 @@ export default async function ResumePage() {
   const resume = await getResume();
 
   return (
-    <div className="container mx-auto py-6">
-      <ResumeBuilder initialContent={resume?.content} />
+    <div className="min-h-screen bg-cream py-12">
+      <div className="container mx-auto px-4">
+        <ResumeBuilder initialContent={resume?.content} />
+      </div>
     </div>
   );
 }

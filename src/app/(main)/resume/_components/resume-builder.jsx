@@ -10,6 +10,12 @@ import {
   Loader2,
   Monitor,
   Save,
+  Mail,
+  FileText,
+  Zap,
+  Briefcase,
+  GraduationCap,
+  Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import MDEditor from "@uiw/react-md-editor";
@@ -84,11 +90,11 @@ export default function ResumeBuilder({ initialContent }) {
   const getContactMarkdown = () => {
     const { contactInfo } = formValues;
     const parts = [];
-    if (contactInfo.email) parts.push(`📧 ${contactInfo.email}`);
-    if (contactInfo.mobile) parts.push(`📱 ${contactInfo.mobile}`);
+    if (contactInfo.email) parts.push(`✉ ${contactInfo.email}`);
+    if (contactInfo.mobile) parts.push(`☎ ${contactInfo.mobile}`);
     if (contactInfo.linkedin)
-      parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
-    if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
+      parts.push(`[LinkedIn](${contactInfo.linkedin})`);
+    if (contactInfo.twitter) parts.push(`[Twitter](${contactInfo.twitter})`);
 
     return parts.length > 0
       ? `## <div align="center">${user.fullName}</div>
@@ -147,59 +153,94 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   return (
-    <div data-color-mode="light" className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-        <h1 className="font-bold gradient-title text-5xl md:text-6xl">
-          Resume Builder
-        </h1>
-        <div className="space-x-2">
-          <Button
-            variant="destructive"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save
-              </>
-            )}
-          </Button>
-          <Button onClick={generatePDF} disabled={isGenerating}>
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Download PDF
-              </>
-            )}
-          </Button>
+    <div data-color-mode="light" className="space-y-8">
+      {/* Header Section */}
+      <div className="bg-white border-4 border-black rounded-xl shadow-neu p-6 md:p-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div>
+            <h1 className="logo-font text-4xl md:text-5xl text-tanjiro-green mb-2 text-shadow-medium">
+              RESUME BUILDER
+            </h1>
+            <p className="text-base md:text-lg text-charcoal/70 font-medium">
+              Create a professional resume with AI-powered assistance
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="destructive"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSaving}
+              className="h-12 px-6 font-bold"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-5 w-5" />
+                  Save Resume
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={generatePDF} 
+              disabled={isGenerating}
+              className="h-12 px-6 font-bold"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-5 w-5" />
+                  Download PDF
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="edit">Form</TabsTrigger>
-          <TabsTrigger value="preview">Markdown</TabsTrigger>
-        </TabsList>
+      {/* Tabs Section */}
+      <div className="bg-white border-4 border-black rounded-xl shadow-neu p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="w-full grid grid-cols-2 h-14">
+            <TabsTrigger value="edit" className="text-base font-bold data-[state=active]:shadow-neu-sm">
+              <Edit className="h-5 w-5 mr-2" />
+              Edit Form
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="text-base font-bold data-[state=active]:shadow-neu-sm">
+              <Monitor className="h-5 w-5 mr-2" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="edit">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <TabsContent value="edit" className="space-y-0 mt-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-tanjiro-green border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <Mail className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Contact Information
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      How employers can reach you
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                  <label className="text-sm font-bold text-charcoal">Email Address</label>
                   <Input
                     {...register("contactInfo.email")}
                     type="email"
@@ -207,39 +248,39 @@ export default function ResumeBuilder({ initialContent }) {
                     error={errors.contactInfo?.email}
                   />
                   {errors.contactInfo?.email && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-demon-red font-semibold">
                       {errors.contactInfo.email.message}
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mobile Number</label>
+                <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                  <label className="text-sm font-bold text-charcoal">Mobile Number</label>
                   <Input
                     {...register("contactInfo.mobile")}
                     type="tel"
                     placeholder="+1 234 567 8900"
                   />
                   {errors.contactInfo?.mobile && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-demon-red font-semibold">
                       {errors.contactInfo.mobile.message}
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">LinkedIn URL</label>
+                <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                  <label className="text-sm font-bold text-charcoal">LinkedIn Profile</label>
                   <Input
                     {...register("contactInfo.linkedin")}
                     type="url"
                     placeholder="https://linkedin.com/in/your-profile"
                   />
                   {errors.contactInfo?.linkedin && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-demon-red font-semibold">
                       {errors.contactInfo.linkedin.message}
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
+                <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                  <label className="text-sm font-bold text-charcoal">
                     Twitter/X Profile
                   </label>
                   <Input
@@ -248,7 +289,7 @@ export default function ResumeBuilder({ initialContent }) {
                     placeholder="https://twitter.com/your-handle"
                   />
                   {errors.contactInfo?.twitter && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-demon-red font-semibold">
                       {errors.contactInfo.twitter.message}
                     </p>
                   )}
@@ -257,48 +298,96 @@ export default function ResumeBuilder({ initialContent }) {
             </div>
 
             {/* Summary */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Professional Summary</h3>
-              <Controller
-                name="summary"
-                control={control}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    className="h-32"
-                    placeholder="Write a compelling professional summary..."
-                    error={errors.summary}
-                  />
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-demon-red border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <FileText className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Professional Summary
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      Brief overview of your career and goals
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                <label className="text-sm font-bold text-charcoal">Summary</label>
+                <Controller
+                  name="summary"
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      {...field}
+                      className="min-h-[140px]"
+                      placeholder="Write a compelling professional summary that highlights your experience and achievements..."
+                      error={errors.summary}
+                    />
+                  )}
+                />
+                {errors.summary && (
+                  <p className="text-sm text-demon-red font-semibold">{errors.summary.message}</p>
                 )}
-              />
-              {errors.summary && (
-                <p className="text-sm text-red-500">{errors.summary.message}</p>
-              )}
+              </div>
             </div>
 
             {/* Skills */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Skills</h3>
-              <Controller
-                name="skills"
-                control={control}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    className="h-32"
-                    placeholder="List your key skills..."
-                    error={errors.skills}
-                  />
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-earthy-orange border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <Zap className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Skills
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      Your technical and soft skills
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 p-4 bg-white border-3 border-black rounded-lg">
+                <label className="text-sm font-bold text-charcoal">Your Skills</label>
+                <Controller
+                  name="skills"
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      {...field}
+                      className="min-h-[140px]"
+                      placeholder="List your key skills (e.g., JavaScript, React, Node.js, Project Management, etc.)..."
+                      error={errors.skills}
+                    />
+                  )}
+                />
+                {errors.skills && (
+                  <p className="text-sm text-demon-red font-semibold">{errors.skills.message}</p>
                 )}
-              />
-              {errors.skills && (
-                <p className="text-sm text-red-500">{errors.skills.message}</p>
-              )}
+              </div>
             </div>
 
             {/* Experience */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Work Experience</h3>
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-tanjiro-green border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <Briefcase className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Work Experience
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      Your professional work history
+                    </p>
+                  </div>
+                </div>
+              </div>
               <Controller
                 name="experience"
                 control={control}
@@ -311,15 +400,29 @@ export default function ResumeBuilder({ initialContent }) {
                 )}
               />
               {errors.experience && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.experience.message}
                 </p>
               )}
             </div>
 
             {/* Education */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Education</h3>
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-zenitsu-yellow border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <GraduationCap className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Education
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      Your academic background
+                    </p>
+                  </div>
+                </div>
+              </div>
               <Controller
                 name="education"
                 control={control}
@@ -332,15 +435,29 @@ export default function ResumeBuilder({ initialContent }) {
                 )}
               />
               {errors.education && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.education.message}
                 </p>
               )}
             </div>
 
             {/* Projects */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Projects</h3>
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-nezuko-pink border-3 border-black flex items-center justify-center shadow-neu-sm">
+                    <Rocket className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-black text-charcoal">
+                      Projects
+                    </h3>
+                    <p className="text-sm font-medium text-charcoal/60 mt-1">
+                      Notable projects you've worked on
+                    </p>
+                  </div>
+                </div>
+              </div>
               <Controller
                 name="projects"
                 control={control}
@@ -353,67 +470,77 @@ export default function ResumeBuilder({ initialContent }) {
                 )}
               />
               {errors.projects && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.projects.message}
                 </p>
               )}
             </div>
-          </form>
-        </TabsContent>
+            </form>
+          </TabsContent>
 
-        <TabsContent value="preview">
-          {activeTab === "preview" && (
-            <Button
-              variant="link"
-              type="button"
-              className="mb-2"
-              onClick={() =>
-                setResumeMode(resumeMode === "preview" ? "edit" : "preview")
-              }
-            >
-              {resumeMode === "preview" ? (
-                <>
-                  <Edit className="h-4 w-4" />
-                  Edit Resume
-                </>
-              ) : (
-                <>
-                  <Monitor className="h-4 w-4" />
-                  Show Preview
-                </>
-              )}
-            </Button>
-          )}
+          <TabsContent value="preview" className="space-y-0 mt-6">
+            <div className="bg-cream border-4 border-black rounded-xl shadow-neu-lg p-6">
+            {activeTab === "preview" && (
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-black text-charcoal">Resume Preview</h3>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() =>
+                    setResumeMode(resumeMode === "preview" ? "edit" : "preview")
+                  }
+                  className="font-bold"
+                >
+                  {resumeMode === "preview" ? (
+                    <>
+                      <Edit className="h-5 w-5 mr-2" />
+                      Edit Markdown
+                    </>
+                  ) : (
+                    <>
+                      <Monitor className="h-5 w-5 mr-2" />
+                      Show Preview
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
-          {activeTab === "preview" && resumeMode !== "preview" && (
-            <div className="flex p-3 gap-2 items-center border-2 border-yellow-600 text-yellow-600 rounded mb-2">
-              <AlertTriangle className="h-5 w-5" />
-              <span className="text-sm">
-                You will lose editied markdown if you update the form data.
-              </span>
-            </div>
-          )}
-          <div className="border rounded-lg">
-            <MDEditor
-              value={previewContent}
-              onChange={setPreviewContent}
-              height={800}
-              preview={resumeMode}
-            />
-          </div>
-          <div className="hidden">
-            <div id="resume-pdf">
-              <MDEditor.Markdown
-                source={previewContent}
-                style={{
-                  background: "white",
-                  color: "black",
-                }}
+            {activeTab === "preview" && resumeMode !== "preview" && (
+              <div className="flex p-4 gap-3 items-start bg-zenitsu-yellow/20 border-3 border-zenitsu-yellow rounded-lg mb-4">
+                <AlertTriangle className="h-6 w-6 text-charcoal flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-charcoal mb-1">Warning</p>
+                  <p className="text-sm font-medium text-charcoal/80">
+                    You will lose edited markdown if you update the form data.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="border-4 border-black rounded-lg overflow-hidden bg-white">
+              <MDEditor
+                value={previewContent}
+                onChange={setPreviewContent}
+                height={800}
+                preview={resumeMode}
               />
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      <div className="hidden">
+        <div id="resume-pdf">
+          <MDEditor.Markdown
+            source={previewContent}
+            style={{
+              background: "white",
+              color: "black",
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -24,100 +24,109 @@ export default async function Header() {
   await checkUser();
 
   return (
-    <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 supports-[backdrop-filter]:bg-background/60">
-      <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/">
-          <Image
-            src={"/logo.png"}
-            alt="Sensai Logo"
-            width={200}
-            height={60}
-            className="h-12 py-1 w-auto object-contain"
-          />
+    <header className="fixed top-0 w-full border-b-4 border-black bg-white z-50 shadow-neu">
+      <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative w-12 h-12 md:w-14 md:h-14 border-3 border-black rounded-lg shadow-neu-sm group-hover:shadow-neu group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all overflow-hidden bg-white">
+            <Image
+              src="/logo-uproot.webp"
+              alt="UPROOT Logo"
+              fill
+              className="object-contain p-1"
+              priority
+            />
+          </div>
+          <span className="logo-font text-2xl md:text-3xl text-tanjiro-green tracking-wider group-hover:text-demon-red transition-colors">
+            UPROOT
+          </span>
         </Link>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2 md:space-x-4">
+        <div className="flex items-center gap-3">
           <SignedIn>
-            <Link href="/dashboard">
+            <Link href="/dashboard" className="hidden md:block">
               <Button
                 variant="outline"
-                className="hidden md:inline-flex items-center gap-2"
+                className="h-11 font-bold"
               >
-                <LayoutDashboard className="h-4 w-4" />
+                <LayoutDashboard className="h-5 w-5 mr-2" />
                 Industry Insights
-              </Button>
-              <Button variant="ghost" className="md:hidden w-10 h-10 p-0">
-                <LayoutDashboard className="h-4 w-4" />
               </Button>
             </Link>
 
-            <Link href={"contact-us"}>
+            <Link href="/contact-us" className="hidden md:block">
               <Button
-                variant='outline'
-                className="hidden md:inline-flex items-center gap-2"
+                variant="outline"
+                className="h-11 font-bold"
               >
-                <Contact2Icon className="h-4 w-4" />
+                <Contact2Icon className="h-5 w-5 mr-2" />
                 Contact Us
-              </Button>
-              <Button variant="ghost" className="md:hidden w-10 h-10 p-0">
-                <Contact2Icon className="h-4 w-4" />
               </Button>
             </Link>
 
             {/* Growth Tools Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <StarsIcon className="h-4 w-4" />
-                  <span className="hidden md:block">Growth Tools</span>
-                  <ChevronDown className="h-4 w-4" />
+                <Button className="h-11 font-bold">
+                  <StarsIcon className="h-5 w-5 mr-2" />
+                  <span className="hidden md:inline">Growth Tools</span>
+                  <ChevronDown className="h-5 w-5 ml-1" />
                 </Button> 
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link href="/resume" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Build Resume
+                  <Link href="/resume" className="flex items-center gap-3 cursor-pointer py-3">
+                    <FileText className="h-5 w-5" />
+                    <span className="font-semibold">Build Resume</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
                     href="/ai-cover-letter"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-3 cursor-pointer py-3"
                   >
-                    <PenBox className="h-4 w-4" />
-                    Cover Letter
+                    <PenBox className="h-5 w-5" />
+                    <span className="font-semibold">Cover Letter</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/interview" className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4" />
-                    Interview Prep
+                  <Link href="/interview" className="flex items-center gap-3 cursor-pointer py-3">
+                    <GraduationCap className="h-5 w-5" />
+                    <span className="font-semibold">Interview Prep</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* User Profile Button */}
+            <div className="relative">
+              <UserButton
+                appearance={{
+                  variables: {
+                    colorPrimary: "#1a4d2e",
+                    colorText: "#1b1b1b",
+                  },
+                  elements: {
+                    avatarBox: "w-12 h-12 border-3 border-black shadow-neu-sm rounded-full",
+                    userButtonAvatar: "rounded-full",
+                    userButtonPopoverCard: "shadow-neu-lg border-4 border-black rounded-xl bg-white",
+                    userPreviewMainIdentifier: "font-bold text-charcoal",
+                    userPreviewSecondaryIdentifier: "font-medium text-charcoal/70",
+                    userButtonPopoverActionButton: "font-semibold hover:bg-tanjiro-green/10 text-charcoal",
+                    userButtonPopoverActionButtonText: "text-charcoal",
+                    userButtonPopoverFooter: "hidden",
+                  },
+                }}
+                afterSignOutUrl="/"
+              />
+            </div>
           </SignedIn>
 
           <SignedOut>
-            <SignInButton>
-              <Button variant="outline">Sign In</Button>
+            <SignInButton mode="redirect" redirectUrl="/sign-in">
+              <Button variant="outline" className="h-11 font-bold">Sign In</Button>
             </SignInButton>
           </SignedOut>
-
-          <SignedIn>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10",
-                  userButtonPopoverCard: "shadow-xl",
-                  userPreviewMainIdentifier: "font-semibold",
-                },
-              }}
-              afterSignOutUrl="/"
-            />
-          </SignedIn>
         </div>
       </nav>
     </header>

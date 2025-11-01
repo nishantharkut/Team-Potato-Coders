@@ -85,32 +85,34 @@ export default function Quiz() {
   };
 
   if (generatingQuiz) {
-    return <BarLoader className="mt-4" width={"100%"} color="gray" />;
-  }
-
-  // Show results if quiz is completed
-  if (resultData) {
     return (
-      <div className="mx-2">
-        <QuizResult result={resultData} onStartNew={startNewQuiz} />
+      <div className="flex justify-center py-12">
+        <BarLoader width={"100%"} color="#1a4d2e" />
       </div>
     );
   }
 
+  // Show results if quiz is completed
+  if (resultData) {
+    return <QuizResult result={resultData} onStartNew={startNewQuiz} />;
+  }
+
   if (!quizData) {
     return (
-      <Card className="mx-2">
+      <Card className="bg-cream">
         <CardHeader>
-          <CardTitle>Ready to test your knowledge?</CardTitle>
+          <CardTitle className="text-2xl font-black text-charcoal">
+            Ready to test your knowledge?
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
+          <p className="text-base font-medium text-charcoal/70">
             This quiz contains 10 questions specific to your industry and
             skills. Take your time and choose the best answer for each question.
           </p>
         </CardContent>
         <CardFooter>
-          <Button onClick={generateQuizFn} className="w-full">
+          <Button onClick={generateQuizFn} className="w-full h-12 font-bold text-base">
             Start Quiz
           </Button>
         </CardFooter>
@@ -121,40 +123,56 @@ export default function Quiz() {
   const question = quizData[currentQuestion];
 
   return (
-    <Card className="mx-2">
-      <CardHeader>
-        <CardTitle>
+    <Card className="bg-cream">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl md:text-2xl font-black text-charcoal">
           Question {currentQuestion + 1} of {quizData.length}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-lg font-medium">{question.question}</p>
+      <CardContent className="space-y-6">
+        <div className="bg-white border-3 border-black rounded-lg p-6">
+          <p className="text-lg md:text-xl font-bold text-charcoal leading-relaxed">
+            {question.question}
+          </p>
+        </div>
+
         <RadioGroup
           onValueChange={handleAnswer}
           value={answers[currentQuestion]}
-          className="space-y-2"
+          className="space-y-3"
         >
           {question.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem value={option} id={`option-${index}`} />
-              <Label htmlFor={`option-${index}`}>{option}</Label>
+            <div 
+              key={index} 
+              className="flex items-start space-x-3 bg-white border-3 border-black rounded-lg p-4 hover:bg-tanjiro-green/5 transition-colors cursor-pointer"
+            >
+              <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
+              <Label 
+                htmlFor={`option-${index}`} 
+                className="text-base font-medium text-charcoal cursor-pointer flex-1"
+              >
+                {option}
+              </Label>
             </div>
           ))}
         </RadioGroup>
 
         {showExplanation && (
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <p className="font-medium">Explanation:</p>
-            <p className="text-muted-foreground">{question.explanation}</p>
+          <div className="bg-tanjiro-green/10 border-3 border-tanjiro-green rounded-lg p-6 space-y-2">
+            <p className="font-black text-charcoal text-lg">Explanation:</p>
+            <p className="text-base font-medium text-charcoal/80 leading-relaxed">
+              {question.explanation}
+            </p>
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between gap-4">
         {!showExplanation && (
           <Button
             onClick={() => setShowExplanation(true)}
             variant="outline"
             disabled={!answers[currentQuestion]}
+            className="h-12 px-6 font-bold"
           >
             Show Explanation
           </Button>
@@ -162,14 +180,17 @@ export default function Quiz() {
         <Button
           onClick={handleNext}
           disabled={!answers[currentQuestion] || savingResult}
-          className="ml-auto"
+          className="ml-auto h-12 px-8 font-bold text-base"
         >
-          {savingResult && (
-            <BarLoader className="mt-4" width={"100%"} color="gray" />
+          {savingResult ? (
+            <BarLoader width={"60px"} color="#f5f5dc" />
+          ) : (
+            <>
+              {currentQuestion < quizData.length - 1
+                ? "Next Question"
+                : "Finish Quiz"}
+            </>
           )}
-          {currentQuestion < quizData.length - 1
-            ? "Next Question"
-            : "Finish Quiz"}
         </Button>
       </CardFooter>
     </Card>

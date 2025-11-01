@@ -76,13 +76,13 @@ const OnboardingForm = ({ industries }) => {
   const watchIndustry = watch("industry");
 
   return (
-    <div className="flex items-center justify-center bg-background">
-      <Card className="w-full max-w-lg mt-10 mx-2">
-        <CardHeader>
-          <CardTitle className="gradient-title text-4xl">
-            Complete Your Profile
+    <div className="flex items-center justify-center min-h-screen bg-cream py-12 px-4">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="space-y-4">
+          <CardTitle className="text-4xl md:text-5xl font-black text-charcoal logo-font text-center">
+            COMPLETE YOUR PROFILE
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-center text-base md:text-lg font-semibold text-charcoal">
             Select your industry to get personalized career insights and
             recommendations.
           </CardDescription>
@@ -115,7 +115,7 @@ const OnboardingForm = ({ industries }) => {
                 </SelectContent>
               </Select>
               {errors.industry && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.industry.message}
                 </p>
               )}
@@ -142,7 +142,7 @@ const OnboardingForm = ({ industries }) => {
                   </SelectContent>
                 </Select>
                 {errors.subIndustry && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-demon-red font-semibold">
                     {errors.subIndustry.message}
                   </p>
                 )}
@@ -160,7 +160,7 @@ const OnboardingForm = ({ industries }) => {
                 {...register("experience")}
               />
               {errors.experience && (
-                <p className="text-sm text-red-500">
+                <p className="text-sm text-demon-red font-semibold">
                   {errors.experience.message}
                 </p>
               )}
@@ -173,11 +173,11 @@ const OnboardingForm = ({ industries }) => {
                 placeholder="e.g., Python, JavaScript, Project Management"
                 {...register("skills")}
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-charcoal/70 font-medium">
                 Separate multiple skills with commas
               </p>
               {errors.skills && (
-                <p className="text-sm text-red-500">{errors.skills.message}</p>
+                <p className="text-sm text-demon-red font-semibold">{errors.skills.message}</p>
               )}
             </div>
 
@@ -190,14 +190,14 @@ const OnboardingForm = ({ industries }) => {
                 {...register("bio")}
               />
               {errors.bio && (
-                <p className="text-sm text-red-500">{errors.bio.message}</p>
+                <p className="text-sm text-demon-red font-semibold">{errors.bio.message}</p>
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={updateLoading}>
+            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={updateLoading}>
               {updateLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Saving...
                 </>
               ) : (

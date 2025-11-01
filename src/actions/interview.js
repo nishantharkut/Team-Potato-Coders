@@ -30,7 +30,9 @@ export async function generateQuiz() {
     
     Each question should be multiple choice with 4 options.
     
-    Return the response in this JSON format only, no additional text:
+    IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no additional text.
+    
+    Format:
     {
       "questions": [
         {
@@ -41,19 +43,42 @@ export async function generateQuiz() {
         }
       ]
     }
+    
+    Return the JSON directly without any formatting or explanation.
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = result.response;
-    const text = response.text();
-    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
-    const quiz = JSON.parse(cleanedText);
+    let text = response.text();
+    
+    // More aggressive cleaning
+    text = text.trim();
+    // Remove markdown code blocks
+    text = text.replace(/```(?:json)?\n?/g, "");
+    text = text.replace(/```\n?/g, "");
+    // Remove any leading/trailing whitespace
+    text = text.trim();
+    
+    // Try to find JSON object in the text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      text = jsonMatch[0];
+    }
+    
+    console.log("Cleaned text:", text.substring(0, 200)); // Log first 200 chars for debugging
+    
+    const quiz = JSON.parse(text);
+
+    if (!quiz.questions || !Array.isArray(quiz.questions)) {
+      throw new Error("Invalid quiz format");
+    }
 
     return quiz.questions;
   } catch (error) {
     console.error("Error generating quiz:", error);
-    throw new Error("Failed to generate quiz questions");
+    console.error("Raw response:", error.message);
+    throw new Error("Failed to generate quiz questions. Please try again.");
   }
 }
 

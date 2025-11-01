@@ -5,26 +5,30 @@ import CoverLetterGenerator from "../_components/cover-letter-generator";
 
 export default function NewCoverLetterPage() {
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex flex-col space-y-2">
-        <Link href="/ai-cover-letter">
-          <Button variant="link" className="gap-2 pl-0">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Cover Letters
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-cream py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col space-y-6">
+          <Link href="/ai-cover-letter">
+            <Button variant="outline" className="gap-2 font-bold h-11">
+              <ArrowLeft className="h-5 w-5" />
+              Back to Cover Letters
+            </Button>
+          </Link>
 
-        <div className="pb-6">
-          <h1 className="text-6xl font-bold gradient-title">
-            Create Cover Letter
-          </h1>
-          <p className="text-muted-foreground">
-            Generate a tailored cover letter for your job application
-          </p>
+          <div className="bg-white border-4 border-black rounded-xl shadow-neu p-6 md:p-8">
+            <h1 className="logo-font text-4xl md:text-5xl text-tanjiro-green text-shadow-medium mb-2">
+              CREATE COVER LETTER
+            </h1>
+            <p className="text-base md:text-lg text-charcoal/70 font-medium">
+              Generate a tailored cover letter for your job application
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <CoverLetterGenerator />
         </div>
       </div>
-
-      <CoverLetterGenerator />
     </div>
   );
 }
