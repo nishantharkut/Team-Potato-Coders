@@ -122,9 +122,14 @@ const Chatbot = ({ open, onOpenChange }) => {
                     : "bg-muted"
                 )}
               >
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
+                <div 
+                  className="text-sm whitespace-pre-wrap break-words"
+                  dangerouslySetInnerHTML={{ 
+                    __html: message.role === "assistant" 
+                      ? message.content.replace(/\n/g, '<br>') 
+                      : message.content.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+                  }}
+                />
               </div>
             </div>
           ))}

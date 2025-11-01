@@ -33,7 +33,7 @@ export async function POST(req) {
     });
 
     // Build system prompt with application features
-    const systemPrompt = `You are a helpful AI assistant for Sensai, an AI-powered career development platform. Your role is to help users with career guidance, interview preparation, resume building, and cover letter creation.
+    const systemPrompt = `You are a helpful AI assistant for UpRoot, an AI-powered career development platform. Your role is to help users with career guidance, interview preparation, resume building, and cover letter creation.
 
 About Sensai's Features:
 1. AI-Powered Career Guidance: Personalized career advice and insights powered by advanced AI technology
@@ -60,9 +60,17 @@ Instructions:
 - If asked about features, explain how they work and where to find them
 - Keep responses concise but informative
 - You can discuss resume building, interview prep, cover letters, industry insights, and career development strategies
-- IMPORTANT: Write in plain text only. Do NOT use markdown formatting such as **bold**, *italic*, # headers, bullet points with markdown syntax, code blocks, links with markdown syntax, or any other markdown elements
-- Use regular text formatting only - write naturally as if having a text conversation
-- If you need to emphasize something, use capitalization or natural language rather than markdown`;
+
+FORMATTING RULES:
+- You can use HTML tags for text formatting: <b> or <strong> for bold text, <i> or <em> for italic text
+- Use <b>Resume Building</b> for bold text instead of **Resume Building** or asterisks
+- Use <i>important point</i> for italic text instead of *important point* or asterisks
+- You can combine them: <b><i>very important</i></b> for bold and italic
+- Write naturally as if in a text conversation, but feel free to use HTML formatting tags for emphasis
+- Use numbered lists with plain numbers (1. 2. 3.) when listing items
+- Use line breaks to separate points
+- Example: "Here are some areas to focus on: 1. <b>Resume Building</b> - You can create... 2. <b>Interview Preparation</b> - Preparing for..."
+- Only use <b>, <strong>, <i>, and <em> tags - do not use other HTML tags or markdown syntax`;
 
     // Build messages array with system prompt and chat history
     const messages = [
@@ -81,7 +89,27 @@ Instructions:
       temperature: 0.7,
     });
 
-    const aiResponse = completion.choices[0].message.content;
+    let aiResponse = completion.choices[0].message.content;
+
+    // Convert markdown to HTML if any slipped through
+    // Convert markdown bold (**text** or __text__) to <b> (do this first to avoid conflicts)
+    aiResponse = aiResponse.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    aiResponse = aiResponse.replace(/__([^_]+)__/g, '<b>$1</b>');
+    // Convert markdown italic (*text* or _text_) to <i> (only single asterisks/underscores)
+    // First handle single asterisks that aren't part of double asterisks
+    aiResponse = aiResponse.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<i>$1</i>');
+    // Then handle single underscores that aren't part of double underscores
+    aiResponse = aiResponse.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<i>$1</i>');
+    
+    // Sanitize HTML - only allow safe formatting tags
+    // Remove any HTML tags that aren't b, strong, i, or em
+    aiResponse = aiResponse.replace(/<(?!\/?(?:b|strong|i|em)\b)[^>]+>/gi, '');
+    
+    // Remove markdown headers, code blocks, and links (keeping text only)
+    aiResponse = aiResponse.replace(/^#{1,6}\s+/gm, '');
+    aiResponse = aiResponse.replace(/```[\s\S]*?```/g, '');
+    aiResponse = aiResponse.replace(/`([^`]+)`/g, '$1');
+    aiResponse = aiResponse.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
 
     return NextResponse.json({
       message: aiResponse,
