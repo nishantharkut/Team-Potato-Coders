@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWeb3 } from "@/hooks/useWeb3";
+import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   getSubscriptionPriceInCrypto, 
@@ -94,7 +95,8 @@ const pricingTiers = [
   },
 ];
 
-export default function PricingPage() {
+function PricingPageContent() {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(null);
   const [selectedTier, setSelectedTier] = useState(null);
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
@@ -102,6 +104,8 @@ export default function PricingPage() {
   const [cryptoAmount, setCryptoAmount] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('ETH'); // Default to ETH
   const [linkedWallet, setLinkedWallet] = useState(null);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const { connect, account, isConnected, balance, isLoading: web3Loading, chainId, switchNetwork } = useWeb3();
   
   const supportedCurrencies = getSupportedCurrencies();
@@ -114,9 +118,57 @@ export default function PricingPage() {
     return priceIds[tier];
   };
 
+  // Fetch subscription status and linked wallet on mount and when returning from payment
   useEffect(() => {
+    fetchSubscriptionStatus();
     fetchLinkedWallet();
-  }, []);
+    
+    // Check if returning from payment success
+    const paymentSuccess = searchParams.get('payment_success');
+    if (paymentSuccess === 'true') {
+      // Small delay to ensure backend has processed the subscription
+      setTimeout(() => {
+        fetchSubscriptionStatus();
+        // Remove the query parameter from URL
+        window.history.replaceState({}, '', window.location.pathname);
+        toast.success("Payment successful! Your subscription has been activated.");
+      }, 1000);
+    }
+    
+    // Refresh subscription when page becomes visible (user returns from payment)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchSubscriptionStatus();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also refresh on focus (when user switches back to tab)
+    window.addEventListener('focus', fetchSubscriptionStatus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchSubscriptionStatus);
+    };
+  }, [searchParams]);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      setSubscriptionLoading(true);
+      const response = await fetch("/api/subscription/current");
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentSubscription(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch subscription status:", error);
+      // Default to Free tier on error
+      setCurrentSubscription({ tier: "Free", status: "active" });
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   const fetchLinkedWallet = async () => {
     try {
@@ -351,9 +403,13 @@ export default function PricingPage() {
         }
 
         toast.success("Subscription activated!", {
-          description: "Redirecting to your subscription page...",
+          description: "Your subscription is now active!",
           duration: 3000,
         });
+        
+        // Refresh subscription status before redirecting
+        await fetchSubscriptionStatus();
+        
         setTimeout(() => {
           window.location.href = "/settings/subscription";
         }, 1500);
@@ -387,6 +443,7 @@ export default function PricingPage() {
       setLoading(null);
     }
   };
+
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden bg-cream">
@@ -509,17 +566,34 @@ export default function PricingPage() {
                     <Button
                       variant={tier.buttonVariant}
                       className={`w-full h-12 text-sm font-black uppercase tracking-wide ${
-                        tier.name === "Free" 
+                        (subscriptionLoading ? false : currentSubscription?.tier === tier.name) 
                           ? "cursor-not-allowed opacity-50" 
+                          : tier.name === "Free"
+                          ? "cursor-not-allowed opacity-50"
                           : ""
                       }`}
                       onClick={() => handleSubscribe(tier.name)}
-                      disabled={tier.name === "Free" || loading === tier.name}
+                      disabled={
+                        subscriptionLoading ||
+                        tier.name === "Free" || 
+                        loading === tier.name ||
+                        currentSubscription?.tier === tier.name
+                      }
                     >
                       {loading === tier.name ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Processing...
+                        </>
+                      ) : subscriptionLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : currentSubscription?.tier === tier.name ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Current Plan
                         </>
                       ) : tier.name === "Free" ? (
                         <>
@@ -794,5 +868,17 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-24 pb-16 px-4 flex items-center justify-center bg-cream">
+        <Loader2 className="h-8 w-8 animate-spin text-tanjiro-green" />
+      </div>
+    }>
+      <PricingPageContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 // import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { UserButton } from '@clerk/nextjs'
 import { DotIcon } from 'lucide-react'
