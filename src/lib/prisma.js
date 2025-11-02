@@ -12,15 +12,24 @@ const createPrismaClient = () => {
     });
   }
 
+  // Supabase connection pool configuration for serverless environments
+  // Important: Use Supabase connection pooler URL (Transaction mode) for Vercel
+  // The shared pooler URL should look like: postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+  // Supabase's pooler handles connection pooling, so Prisma will work with it directly
+  
   return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 };
 
-export const db = globalThis.prisma || createPrismaClient();
+// Fix: Use globalThis in both development and production to prevent connection pool exhaustion
+// In serverless environments like Vercel, we need to reuse the client instance
+const globalForPrisma = globalThis;
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.prisma = db;
+export const db = globalForPrisma.prisma || createPrismaClient();
+
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = db;
 }
 
 // globalThis.prisma: This global variable ensures that the Prisma client instance is
