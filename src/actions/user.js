@@ -79,7 +79,15 @@ export async function updateUser(data) {
       }
     );
 
+    // Revalidate all pages that use user profile data
     revalidatePath("/");
+    revalidatePath("/dashboard");
+    revalidatePath("/onboarding");
+    revalidatePath("/resume");
+    revalidatePath("/ai-cover-letter");
+    revalidatePath("/interview");
+    revalidatePath("/settings/subscription");
+    
     return { success: true, user: result.updatedUser };
   } catch (error) {
     console.error("Error updating user and industry:", error.message);
