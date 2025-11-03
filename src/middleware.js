@@ -33,8 +33,7 @@ export const config = {
      * - Clerk's internal API routes (handled automatically by clerkMiddleware)
      * - Favicon and logo files
      */
-    '/((?!_next/static|_next/image|favicon.ico|logo-.*\\.(ico|webp)|.*\\.(?:jpg|jpeg|gif|png|svg|ico|webp|css|js|woff|woff2|ttf|eot)$).*)',
-    // Explicitly include API routes (Clerk will handle its own routes automatically)
-    '/(api|trpc)(.*)',
+    '/(?!_next|favicon|logo.*\\.(?:ico|webp)|.*\\.(?:jpg|jpeg|gif|png|svg|ico|webp|css|js|woff|woff2|ttf|eot)$).*',
+    '/api/:path*',
   ],
 };
