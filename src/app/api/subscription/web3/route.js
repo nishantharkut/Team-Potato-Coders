@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { ethers } from "ethers";
 
@@ -10,7 +10,8 @@ import { ethers } from "ethers";
  */
 export async function POST(req) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
+    const userId = session?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -35,7 +36,7 @@ export async function POST(req) {
 
     // Get user
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { id: userId },
       include: { subscription: true },
     });
 

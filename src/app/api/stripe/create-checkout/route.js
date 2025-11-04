@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { stripe } from "@/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/actions/subscription";
 import { db } from "@/lib/prisma";
 
 export async function POST(req) {
   try {
-    const { userId } = await auth();
+    const authSession = await auth();
+    const userId = authSession?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -22,7 +24,7 @@ export async function POST(req) {
 
     // Get user
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { id: userId },
     });
 
     if (!user) {
@@ -30,7 +32,7 @@ export async function POST(req) {
     }
 
     // Get or create Stripe customer
-    const clerkUser = await currentUser();
+    const clerkUser = await getCurrentUser();
     const customerId = await getOrCreateStripeCustomer(
       user.id,
       user.email,

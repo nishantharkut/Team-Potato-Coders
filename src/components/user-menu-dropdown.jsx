@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserButton } from "@clerk/nextjs";
+// UserButton replaced with CustomUserProfileButton
 
 export default function UserMenuDropdown() {
   return (
@@ -34,17 +34,6 @@ export default function UserMenuDropdown() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-black h-[3px] my-2" />
-        <div className="p-2">
-          <UserButton 
-            appearance={{
-              elements: {
-                userButtonPopoverActionButton: {
-                  background: "transparent",
-                },
-              },
-            }}
-          />
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -19,7 +19,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,7 +82,8 @@ function NavLink({ href, children, className, icon: Icon, mobile = false }) {
 }
 
 function MobileMenu() {
-  const { isSignedIn } = useUser();
+  const { data: session } = useSession();
+  const isSignedIn = !!session;
   const pathname = usePathname();
 
   return (
@@ -192,14 +193,14 @@ function MobileMenu() {
                 Contact Us
               </NavLink>
               <div className="pt-4">
-                <SignInButton mode="redirect">
+                <Link href="/sign-in">
                   <Button 
                     variant="outline" 
                     className="w-full h-12 font-black border-3 border-black hover:bg-tanjiro-green hover:text-cream transition-all"
                   >
                     Sign In
                   </Button>
-                </SignInButton>
+                </Link>
               </div>
             </>
           )}
@@ -211,7 +212,8 @@ function MobileMenu() {
 
 export default function Header() {
   const pathname = usePathname();
-  const { isSignedIn } = useUser();
+  const { data: session } = useSession();
+  const isSignedIn = !!session;
 
   return (
     <header className="fixed top-0 w-full border-b-4 border-black bg-white z-50 shadow-neu">
@@ -237,7 +239,8 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-1 justify-end max-w-5xl min-w-0">
-          <SignedIn>
+          {isSignedIn ? (
+            <>
             {/* Main Navigation */}
             <NavLink href="/dashboard" icon={LayoutDashboard}>
               <span className="hidden lg:inline">Dashboard</span>
@@ -371,24 +374,25 @@ export default function Header() {
               <WalletButton />
               <CustomUserProfileButton />
             </div>
-          </SignedIn>
-
-          <SignedOut>
+            </>
+          ) : (
+            <>
             <NavLink href="/pricing" icon={Sparkles}>
               Pricing
             </NavLink>
             <NavLink href="/contact-us" icon={Contact2Icon} className="hidden lg:flex">
               Contact
             </NavLink>
-            <SignInButton mode="redirect">
+            <Link href="/sign-in">
               <Button 
                 variant="outline" 
                 className="h-10 px-4 font-bold border-3 border-black hover:bg-tanjiro-green hover:text-cream transition-all"
               >
                 Sign In
               </Button>
-            </SignInButton>
-          </SignedOut>
+            </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}

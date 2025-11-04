@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { stripe } from "@/lib/stripe";
 import { revalidatePath } from "next/cache";
 
@@ -9,11 +9,12 @@ import { revalidatePath } from "next/cache";
  * Get user's current subscription
  */
 export async function getUserSubscription() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: { subscription: true },
   });
 
@@ -147,11 +148,12 @@ function getTierFromPriceId(priceId) {
  * Cancel subscription at period end
  */
 export async function cancelSubscription() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: { subscription: true },
   });
 
@@ -198,11 +200,12 @@ export async function cancelSubscription() {
  * Reactivate canceled subscription
  */
 export async function reactivateSubscription() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: { subscription: true },
   });
 

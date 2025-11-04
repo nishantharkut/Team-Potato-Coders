@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -11,11 +11,12 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * and provides detailed feedback, enhancements, and suggestions
  */
 export async function reviewResume() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: {
       industryInsight: true,
     },
@@ -180,11 +181,12 @@ Provide actionable, specific feedback that the user can implement immediately.`;
  * Get enhanced version of a specific resume section
  */
 export async function enhanceResumeSection(sectionName, sectionContent) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -228,11 +230,12 @@ Return ONLY the enhanced ${sectionName} content, no explanations or additional t
  * @param {string} resumeId - Optional resume ID to save review to (if not provided, uses most recent)
  */
 export async function reviewUploadedResume(resumeContent, saveAsVersion = false, resumeId = null) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: {
       industryInsight: true,
     },
@@ -416,11 +419,12 @@ Provide actionable, specific feedback that the user can implement immediately.`;
  * Get resume review history/previous feedback for current version
  */
 export async function getResumeReview() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -454,11 +458,12 @@ export async function getResumeReview() {
  * Get review feedback for a specific version
  */
 export async function getResumeReviewForVersion(versionId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");

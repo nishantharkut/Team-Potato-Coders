@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 
 const ELEVENLABS_PHONE_NUMBER = process.env.ELEVENLABS_PHONE_NUMBER;
 const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID;
@@ -310,11 +310,12 @@ async function updateScheduledCallStatus(batchId) {
 }
 
 export async function scheduleCall(data) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -404,11 +405,12 @@ export async function scheduleCall(data) {
 }
 
 export async function getCallLogs() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -486,11 +488,12 @@ export async function getCallLogs() {
 }
 
 export async function getScheduledCalls() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");

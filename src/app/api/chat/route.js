@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import OpenAI from "openai";
 import { db } from "@/lib/prisma";
 
@@ -7,7 +7,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req) {
   try {
-    const { userId } = await auth();
+    const session = await auth();
+    const userId = session?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -23,7 +24,7 @@ export async function POST(req) {
 
     // Get user information for context
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { id: userId },
       select: {
         industry: true,
         skills: true,

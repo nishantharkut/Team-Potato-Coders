@@ -1,42 +1,27 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
 
 export async function updateUser(data) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
 
-  // Get user from Clerk to create new user if needed
-  const clerkUser = await currentUser();
+  const userId = session.user.id;
 
   try {
     // Start a transaction to handle both operations
     const result = await db.$transaction(
       async (tx) => {
-        // Check if user exists, create if not
+        // Get the user
         let user = await tx.user.findUnique({
-          where: { clerkUserId: userId },
+          where: { id: userId },
         });
 
         if (!user) {
-          // Create new user if they don't exist
-          if (!clerkUser) {
-            throw new Error("Clerk user not found");
-          }
-
-          const name = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User";
-          
-          user = await tx.user.create({
-            data: {
-              clerkUserId: userId,
-              name,
-              imageUrl: clerkUser.imageUrl,
-              email: clerkUser.emailAddresses[0]?.emailAddress || "",
-            },
-          });
+          throw new Error("User not found");
         }
 
         // First check if industry exists
@@ -96,13 +81,15 @@ export async function updateUser(data) {
 }
 
 export async function getUserOnboardingStatus() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  
+  const userId = session.user.id;
 
   try {
     const user = await db.user.findUnique({
       where: {
-        clerkUserId: userId,
+        id: userId,
       },
       select: {
         industry: true,
@@ -129,13 +116,14 @@ export async function getUserOnboardingStatus() {
 }
 
 export async function getUserProfile() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   try {
     const user = await db.user.findUnique({
       where: {
-        clerkUserId: userId,
+        id: userId,
       },
       select: {
         industry: true,

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 
 /**
  * Feature limits based on subscription tier
@@ -188,14 +188,15 @@ async function incrementUsage(userId, featureName) {
  * @throws {Error} If user has exceeded their limit
  */
 export async function useFeature(featureName) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
   // Get user from database to get their ID
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) {
@@ -234,13 +235,14 @@ export async function useFeature(featureName) {
  * Get usage statistics for a user
  */
 export async function getUserUsage() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) {
@@ -283,14 +285,15 @@ export async function getUserUsage() {
  * Check if user can use a feature without incrementing usage
  */
 export async function canUseFeature(featureName) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) {
     return false;
   }
 
   try {
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { id: userId },
     });
 
     if (!user) {

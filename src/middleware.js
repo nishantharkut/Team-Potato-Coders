@@ -1,38 +1,61 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/interview(.*)",
-  "/ai-cover-letter(.*)",
-  "/onboarding(.*)",
-  "/settings(.*)",
-  "/resume(.*)",
-]);
-
-export default clerkMiddleware(async (auth, req) => {
-  // Don't return early - let Clerk process all routes for handshake/session management
-  // Only apply protection logic to protected routes
-  
-  // Exclude public resume routes from protection
+export default auth((req) => {
   const pathname = req.nextUrl.pathname;
-  const isPublicResume = pathname.startsWith("/resume/public");
+  const isLoggedIn = !!req.auth;
+
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    "/",
+    "/sign-in",
+    "/sign-up",
+    "/pricing",
+    "/contact-us",
+    "/forgot-password",
+    "/reset-password",
+  ];
+
+  // Check if current path starts with any public route
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + "/"));
   
-  // Protect routes that match the pattern, but skip public resume routes
-  if (isProtectedRoute(req) && !isPublicResume) {
-    await auth.protect();
+  // Check if it's a public resume route
+  const isPublicResume = pathname.startsWith("/resume/public");
+
+  // Protected routes that require authentication
+  const protectedRoutes = [
+    "/dashboard",
+    "/resume",
+    "/interview",
+    "/ai-cover-letter",
+    "/onboarding",
+    "/settings",
+  ];
+
+  // Check if current path requires authentication (excluding public resume routes)
+  const requiresAuth = protectedRoutes.some(route => pathname.startsWith(route)) && !isPublicResume;
+
+  // If route requires auth and user is not logged in, redirect to sign-in
+  if (requiresAuth && !isLoggedIn) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(signInUrl);
   }
-  // Public routes (including /resume/public) are allowed through without protection
+
+  // Allow the request to continue
+  return NextResponse.next();
 });
 
 export const config = {
   matcher: [
     /*
-     * Clerk's recommended matcher pattern from official docs
-     * Skip Next.js internals and all static files
-     * Clerk handles its internal API routes automatically
+     * Match all request paths except for:
+     * - Next.js internals (_next/static, _next/image)
+     * - Static files (images, fonts, etc.)
+     * - API auth routes (handled by NextAuth)
      */
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
+    // Always run for API routes except NextAuth
     '/(api|trpc)(.*)',
   ],
 };

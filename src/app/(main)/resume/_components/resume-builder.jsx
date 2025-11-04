@@ -31,14 +31,15 @@ import { EntryForm } from "./entry-form";
 import ResumeReviewTab from "./resume-review-tab";
 import ResumeListTab from "./resume-list-tab";
 import useFetch from "@/hooks/use-fetch";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
   const [previewContent, setPreviewContent] = useState(initialContent);
-  const { user } = useUser();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [resumeMode, setResumeMode] = useState("preview");
   const [reviewData, setReviewData] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);

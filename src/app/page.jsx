@@ -31,7 +31,7 @@ import { testimonial } from "@/data/testimonial";
 import { faqs } from "@/data/faqs";
 import { howItWorks } from "@/data/howItWorks";
 import { FeaturesSectionDemo } from "@/components/feature";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 // Force dynamic rendering to check authentication
@@ -39,16 +39,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function LandingPage() {
   // Redirect logged-in users to dashboard
-  // Wrap in try-catch to prevent 500 errors if Clerk is not configured
-  try {
-    const { userId } = await auth();
-    if (userId) {
-      redirect("/dashboard");
-    }
-  } catch (error) {
-    // If auth fails (e.g., Clerk not configured), continue to show landing page
-    console.error("Auth check failed:", error.message);
+  const session = await auth();
+  if (session?.user) {
+    redirect("/dashboard");
   }
+  
   return (
     <>
       {/* Hero Section */}

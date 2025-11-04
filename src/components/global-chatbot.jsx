@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { SignedIn } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import Chatbot from "@/components/chatbot";
 
 export default function GlobalChatbot() {
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const { data: session } = useSession();
+
+  if (!session) {
+    return null;
+  }
 
   return (
-    <SignedIn>
+    <>
       {/* Floating Chatbot Button */}
       <Button
         onClick={() => setChatbotOpen(true)}
@@ -23,7 +28,7 @@ export default function GlobalChatbot() {
 
       {/* Chatbot Dialog */}
       <Chatbot open={chatbotOpen} onOpenChange={setChatbotOpen} />
-    </SignedIn>
+    </>
   );
 }
 

@@ -1,17 +1,17 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { db } from "./prisma";
 
 export const checkUser = async () => {
-  const user = await currentUser();
+  const session = await auth();
 
-  if (!user) {
+  if (!session?.user) {
     return null;
   }
 
   try {
     const loggedInUser = await db.user.findUnique({
       where: {
-        clerkUserId: user.id,
+        id: session.user.id,
       },
     });
 
@@ -19,19 +19,20 @@ export const checkUser = async () => {
       return loggedInUser;
     }
 
-    const name = `${user.firstName} ${user.lastName}`;
-
+    // If user doesn't exist in database, create them
+    // This handles the case where NextAuth session exists but user not in DB
     const newUser = await db.user.create({
       data: {
-        clerkUserId: user.id,
-        name,
-        imageUrl: user.imageUrl,
-        email: user.emailAddresses[0].emailAddress,
+        id: session.user.id,
+        name: session.user.name || "User",
+        imageUrl: session.user.image || null,
+        email: session.user.email,
       },
     });
 
     return newUser;
   } catch (error) {
     console.log(error.message);
+    return null;
   }
 };

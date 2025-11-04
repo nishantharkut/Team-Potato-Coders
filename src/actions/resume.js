@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import OpenAI from "openai";
 import { revalidatePath } from "next/cache";
 import { uploadFileToCloudinary, getUserResumeFolder } from "@/lib/cloudinary";
@@ -57,11 +57,12 @@ async function getResumeById(resumeId, userId) {
  * If no file is provided, creates a text-only version
  */
 export async function saveResume(content, resumeId, file = null, fileName = null) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -136,11 +137,12 @@ export async function saveResume(content, resumeId, file = null, fileName = null
  * Create a new named resume with an initial version
  */
 export async function createResumeWithUpload(title, file, extractedContent = null, fileName = null) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -213,11 +215,12 @@ export async function createResumeWithUpload(title, file, extractedContent = nul
  * Upload a new version to an existing resume
  */
 export async function uploadResumeVersion(resumeId, file, extractedContent = null, fileName = null) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -294,11 +297,12 @@ export async function uploadResumeVersion(resumeId, file, extractedContent = nul
  * Get all resumes for the authenticated user
  */
 export async function getAllResumes() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -333,11 +337,12 @@ export async function getAllResumes() {
  * Get a specific resume by ID with all its versions
  */
 export async function getResume(resumeId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -364,11 +369,12 @@ export async function getResume(resumeId) {
  * Get all versions for a specific resume
  */
 export async function getResumeVersions(resumeId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -392,11 +398,12 @@ export async function getResumeVersions(resumeId) {
  * Get a specific resume version by ID
  */
 export async function getResumeVersion(versionId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -423,11 +430,12 @@ export async function getResumeVersion(versionId) {
  * Set a specific version as the current version
  */
 export async function setCurrentVersion(versionId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -509,11 +517,12 @@ export async function getResumeByPublicLink(publicLinkId) {
  * Get public link for a specific resume
  */
 export async function getPublicLink(resumeId) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
   });
 
   if (!user) throw new Error("User not found");
@@ -533,11 +542,12 @@ export async function getPublicLink(resumeId) {
  * Improve content with AI (existing function, keeping for compatibility)
  */
 export async function improveWithAI({ current, type }) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
+    where: { id: userId },
     include: {
       industryInsight: true,
     },

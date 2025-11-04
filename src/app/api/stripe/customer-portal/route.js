@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 
 export async function POST(req) {
   try {
-    const { userId } = await auth();
+    const authSession = await auth();
+    const userId = authSession?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { id: userId },
       include: { subscription: true },
     });
 
