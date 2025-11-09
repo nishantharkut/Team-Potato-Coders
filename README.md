@@ -145,7 +145,13 @@ The platform follows a freemium business model with tiered subscriptions (Free, 
 
 ### Entity Relationship Diagram
 
-> **Note:** The diagram shows primary keys (PK) and entity relationships. Foreign keys (FK) are implied by the relationship lines, and unique constraints (UK) are documented in the Database Models Description section below. Array types (string[], json[]) are represented as string in the diagram for Mermaid compatibility.
+> **Note:** 
+> - **Primary Keys (PK):** All entities have their primary key marked with `PK` after the attribute (e.g., `string id PK`). The `id` field in each entity is the primary key.
+> - **Foreign Keys (FK):** Foreign key relationships are shown by the connecting lines between entities (e.g., `userId` in Account references `id` in User).
+> - **Unique Constraints (UK):** Unique constraints are documented in the Database Models Description section below.
+> - **Array Types:** Array types (string[], json[]) are represented as `string` in the diagram for Mermaid compatibility.
+> 
+> **Viewing the Diagram:** This diagram uses standard Mermaid ER diagram syntax. For best results, view on GitHub, GitLab, or use VS Code with the Mermaid extension. If PK markers don't appear, ensure your viewer supports Mermaid ER diagrams (version 9.0+).
 
 ```mermaid
 erDiagram
@@ -206,7 +212,7 @@ erDiagram
     }
     
     VerificationToken {
-        string identifier
+        string identifier PK
         string token
         datetime expires
     }
