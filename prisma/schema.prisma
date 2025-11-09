@@ -3,143 +3,115 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // For Supabase: Use connection pooler URL in production (Transaction mode)
-  // Direct connection is fine for local development and migrations
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  imageUrl      String?
-  industry      String?    // Combined industry-subindustry (e.g., "tech-software-development")
-  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Auth fields
-  password              String?   // Hashed password
-  emailVerified         DateTime?
-  passwordResetToken    String?   @unique
-  passwordResetExpires  DateTime?
-
-  // Profile fields
-  bio           String?
-  experience    Int?      // Years of experience
-  
-  // Payment
-  stripeCustomerId String?   @unique // Stripe customer ID for Stripe payments
-  walletAddress String?   @unique // Ethereum wallet address for MetaMask payments
-  
-  // Relations
-  skills        String[]  // Array of skills
-  assessments   Assessment[]
-  resumes       Resume[]  // Multiple resumes per user
-  coverLetter   CoverLetter[]
-  scheduledCalls ScheduledCall[]
-  callLogs      CallLog[]
-  subscription  Subscription?
-  usageTracking UsageTracking[]
-  accounts      Account[]
-  sessions      Session[]
+  id                   String           @id @default(uuid())
+  email                String           @unique
+  name                 String?
+  imageUrl             String?
+  industry             String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  bio                  String?
+  experience           Int?
+  skills               String[]
+  stripeCustomerId     String?          @unique
+  walletAddress        String?          @unique
+  emailVerified        DateTime?
+  password             String?
+  passwordResetExpires DateTime?
+  passwordResetToken   String?          @unique
+  accounts             Account[]
+  assessments          Assessment[]
+  callLogs             CallLog[]
+  coverLetter          CoverLetter[]
+  resumes              Resume[]
+  scheduledCalls       ScheduledCall[]
+  sessions             Session[]
+  subscription         Subscription?
+  usageTracking        UsageTracking[]
+  industryInsight      IndustryInsight? @relation(fields: [industry], references: [industry])
 }
 
 model Assessment {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  quizScore     Float     // Overall quiz score
-  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect} 
-  category      String    // "Technical", "Behavioral", etc.
-  improvementTip String?  // AI-generated improvement tip
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  quizScore      Float
+  questions      Json[]
+  category       String
+  improvementTip String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Resume {
-  id              String    @id @default(cuid())
-  userId          String    // Multiple resumes per user allowed
-  user            User      @relation(fields: [userId], references: [id])       
-  title           String    // Name/title of the resume (e.g., "SDE Resume", "Finance Resume")
-  publicLinkId    String    @unique    // Unique identifier for the shareable public link
-  currentVersionId String?  // Points to the current ResumeVersion
-  versions        ResumeVersion[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String          @id @default(cuid())
+  userId           String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  currentVersionId String?
+  publicLinkId     String          @unique
+  title            String
+  user             User            @relation(fields: [userId], references: [id])
+  versions         ResumeVersion[]
 
+  @@unique([userId, title])
   @@index([userId])
-  @@unique([userId, title])  // User can't have two resumes with same title     
 }
 
 model ResumeVersion {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   resumeId      String
-  resume        Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  versionNumber Int       @default(1)
-  isCurrent     Boolean   @default(false)
-
-  // Content
-  content       String    @db.Text // Markdown/text content
-
-  // File storage
-  cloudinaryUrl String?   // URL to the PDF stored in Cloudinary
-  fileName      String?   // Original file name
-
-  // Review data
+  versionNumber Int      @default(1)
+  isCurrent     Boolean  @default(false)
+  content       String
+  cloudinaryUrl String?
+  fileName      String?
   atsScore      Float?
-  feedback      String?   @db.Text // JSON string of review feedback
+  feedback      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  @@unique([resumeId, versionNumber])
   @@index([resumeId])
   @@index([isCurrent])
-  @@unique([resumeId, versionNumber])
 }
 
 model CoverLetter {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])       
-  content         String    // Markdown content
-  jobDescription  String?
-  companyName     String    // Name of the company applying to
-  jobTitle        String    // Position applying for
-  status          String    @default("draft") // draft, completed
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  content        String
+  jobDescription String?
+  companyName    String
+  jobTitle       String
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model IndustryInsight {
-  id            String    @id @default(cuid())
-  industry      String    @unique  // The industry this data belongs to (e.g., "tech-software-development")
-
-  // Users in this industry
-  users         User[]
-
-  // Salary data
-  salaryRanges  Json[]    // Array of { role: string, min: float, max: float, median: float, location: string? }
-
-  // Industry trends
-  growthRate    Float     // Industry growth rate
-  demandLevel   String    // "High", "Medium", "Low"
-  topSkills     String[]  // Most in-demand skills
-
-  // Market conditions
-  marketOutlook String    // "Positive", "Neutral", "Negative"
-  keyTrends     String[]  // Array of current industry trends
-
-  // Learning suggestions
-  recommendedSkills String[]  // Skills recommended for the industry
-
-  lastUpdated   DateTime  @default(now())
-  nextUpdate    DateTime  // Scheduled update time
+  id                String   @id @default(cuid())
+  industry          String   @unique
+  salaryRanges      Json[]
+  growthRate        Float
+  demandLevel       String
+  topSkills         String[]
+  marketOutlook     String
+  keyTrends         String[]
+  recommendedSkills String[]
+  lastUpdated       DateTime @default(now())
+  nextUpdate        DateTime
+  users             User[]
 
   @@index([industry])
 }
@@ -199,9 +171,9 @@ model Subscription {
   updatedAt            DateTime  @updatedAt
   stripeCustomerId     String?
   stripePriceId        String?
-  paymentMethod        String    @default("stripe") // "stripe" or "web3"
-  walletAddress        String?   // Wallet address if payment method is web3
-  transactionHash      String?   // Blockchain transaction hash for Web3 payments
+  paymentMethod        String    @default("stripe")
+  transactionHash      String?
+  walletAddress        String?
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -227,19 +199,18 @@ model UsageTracking {
   @@index([feature])
 }
 
-// NextAuth models
 model Account {
   id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
