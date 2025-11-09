@@ -145,6 +145,8 @@ The platform follows a freemium business model with tiered subscriptions (Free, 
 
 ### Entity Relationship Diagram
 
+> **Note:** The diagram shows primary keys (PK) and entity relationships. Foreign keys (FK) are implied by the relationship lines, and unique constraints (UK) are documented in the Database Models Description section below. Array types (string[], json[]) are represented as string in the diagram for Mermaid compatibility.
+
 ```mermaid
 erDiagram
     User ||--o{ Account : "has"
@@ -164,7 +166,7 @@ erDiagram
     
     User {
         string id PK
-        string email UK
+        string email
         string name
         string imageUrl
         string industry
@@ -172,18 +174,18 @@ erDiagram
         datetime updatedAt
         string bio
         int experience
-        string[] skills
-        string stripeCustomerId UK
-        string walletAddress UK
+        string skills
+        string stripeCustomerId
+        string walletAddress
         datetime emailVerified
         string password
         datetime passwordResetExpires
-        string passwordResetToken UK
+        string passwordResetToken
     }
     
     Account {
         string id PK
-        string userId FK
+        string userId
         string type
         string provider
         string providerAccountId
@@ -198,21 +200,21 @@ erDiagram
     
     Session {
         string id PK
-        string sessionToken UK
-        string userId FK
+        string sessionToken
+        string userId
         datetime expires
     }
     
     VerificationToken {
         string identifier
-        string token UK
+        string token
         datetime expires
     }
     
     Subscription {
         string id PK
-        string userId FK UK
-        string stripeSubscriptionId UK
+        string userId
+        string stripeSubscriptionId
         string tier
         string status
         datetime currentPeriodStart
@@ -230,17 +232,17 @@ erDiagram
     
     Resume {
         string id PK
-        string userId FK
+        string userId
         datetime createdAt
         datetime updatedAt
         string currentVersionId
-        string publicLinkId UK
+        string publicLinkId
         string title
     }
     
     ResumeVersion {
         string id PK
-        string resumeId FK
+        string resumeId
         int versionNumber
         boolean isCurrent
         string content
@@ -254,7 +256,7 @@ erDiagram
     
     CoverLetter {
         string id PK
-        string userId FK
+        string userId
         string content
         string jobDescription
         string companyName
@@ -266,9 +268,9 @@ erDiagram
     
     Assessment {
         string id PK
-        string userId FK
+        string userId
         float quizScore
-        json[] questions
+        string questions
         string category
         string improvementTip
         datetime createdAt
@@ -277,7 +279,7 @@ erDiagram
     
     ScheduledCall {
         string id PK
-        string userId FK
+        string userId
         string phoneNumber
         datetime scheduledTime
         string recipientName
@@ -289,8 +291,8 @@ erDiagram
     
     CallLog {
         string id PK
-        string userId FK
-        string scheduledCallId FK UK
+        string userId
+        string scheduledCallId
         string phoneNumber
         string recipientName
         string status
@@ -306,7 +308,7 @@ erDiagram
     
     UsageTracking {
         string id PK
-        string userId FK
+        string userId
         string feature
         int count
         datetime createdAt
@@ -316,14 +318,14 @@ erDiagram
     
     IndustryInsight {
         string id PK
-        string industry UK
-        json[] salaryRanges
+        string industry
+        string salaryRanges
         float growthRate
         string demandLevel
-        string[] topSkills
+        string topSkills
         string marketOutlook
-        string[] keyTrends
-        string[] recommendedSkills
+        string keyTrends
+        string recommendedSkills
         datetime lastUpdated
         datetime nextUpdate
     }
@@ -335,53 +337,164 @@ erDiagram
 Central entity representing platform users. Stores profile information, authentication data, and references to all user-related entities.
 
 **Key Fields:**
-- `id`: Unique identifier (UUID)
-- `email`: Unique email address
-- `stripeCustomerId`: Stripe customer ID for payments
-- `walletAddress`: Web3 wallet address for blockchain payments
-- `industry`: References IndustryInsight model
-- `skills`: Array of user skills
+- `id`: Primary Key (UUID)
+- `email`: Unique constraint
+- `stripeCustomerId`: Unique constraint, nullable
+- `walletAddress`: Unique constraint, nullable
+- `passwordResetToken`: Unique constraint, nullable
+- `industry`: Foreign Key to IndustryInsight.industry
+- `skills`: Array of strings (stored as PostgreSQL array)
+
+**Relationships:**
+- One-to-Many: Account, Session, Resume, CoverLetter, Assessment, ScheduledCall, CallLog, UsageTracking
+- One-to-One: Subscription
+- Many-to-One: IndustryInsight (optional)
 
 #### Account
 OAuth account information for users who sign in via third-party providers (Google, GitHub, etc.).
 
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `userId`: Foreign Key to User.id
+- `provider`, `providerAccountId`: Composite Unique constraint
+
+**Relationships:**
+- Many-to-One: User
+
 #### Session
 User session tokens for authentication management via NextAuth.js.
+
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `sessionToken`: Unique constraint
+- `userId`: Foreign Key to User.id
+
+**Relationships:**
+- Many-to-One: User
 
 #### VerificationToken
 Email verification tokens for account verification.
 
+**Key Fields:**
+- `identifier`, `token`: Composite Primary Key
+- `token`: Unique constraint
+
+**Relationships:**
+- None (standalone entity)
+
 #### Subscription
 User subscription information including tier, status, payment method, and billing details. Supports both Stripe and Web3 payments.
+
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `userId`: Foreign Key to User.id, Unique constraint (one subscription per user)
+- `stripeSubscriptionId`: Unique constraint, nullable
 
 **Subscription Tiers:**
 - `Free`: Basic features with limited usage
 - `Basic`: $9.99/month - Enhanced features
 - `Pro`: $19.99/month - Unlimited access
 
+**Relationships:**
+- One-to-One: User
+
 #### Resume
 Resume container that can have multiple versions. Each resume has a unique public link for sharing.
+
+**Key Fields:**
+- `id`: Primary Key (CUID)
+- `userId`: Foreign Key to User.id
+- `publicLinkId`: Unique constraint
+- `userId`, `title`: Composite Unique constraint (one resume per title per user)
+
+**Relationships:**
+- Many-to-One: User
+- One-to-Many: ResumeVersion
 
 #### ResumeVersion
 Individual version of a resume with content, ATS score, feedback, and file storage information.
 
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `resumeId`: Foreign Key to Resume.id
+- `resumeId`, `versionNumber`: Composite Unique constraint
+
+**Relationships:**
+- Many-to-One: Resume
+
 #### CoverLetter
 AI-generated cover letters with job-specific information and status tracking.
+
+**Key Fields:**
+- `id`: Primary Key (CUID)
+- `userId`: Foreign Key to User.id
+- `status`: Default value "draft"
+
+**Relationships:**
+- Many-to-One: User
 
 #### Assessment
 Interview quiz results with scores, questions, categories, and improvement tips.
 
+**Key Fields:**
+- `id`: Primary Key (CUID)
+- `userId`: Foreign Key to User.id
+- `questions`: JSON array
+- `quizScore`: Float value
+
+**Relationships:**
+- Many-to-One: User
+
 #### ScheduledCall
 Scheduled call information with phone numbers, timing, and status. Linked to Inngest for automation.
+
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `userId`: Foreign Key to User.id
+- `status`: Default value "scheduled"
+- `inngestEventId`: Inngest event identifier for automation
+
+**Relationships:**
+- Many-to-One: User
+- One-to-One: CallLog (optional)
 
 #### CallLog
 Call execution logs with duration, transcripts, recordings, and error information.
 
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `userId`: Foreign Key to User.id
+- `scheduledCallId`: Foreign Key to ScheduledCall.id, Unique constraint (one log per scheduled call)
+
+**Relationships:**
+- Many-to-One: User
+- One-to-One: ScheduledCall (optional)
+
 #### UsageTracking
 Feature usage tracking per user per month. Tracks usage counts for subscription limit enforcement.
 
+**Key Fields:**
+- `id`: Primary Key (UUID)
+- `userId`: Foreign Key to User.id
+- `userId`, `feature`, `month`: Composite Unique constraint (one record per user per feature per month)
+- `count`: Default value 0
+
+**Relationships:**
+- Many-to-One: User
+
 #### IndustryInsight
 Industry-specific insights including salary ranges, growth rates, skills, trends, and market outlook.
+
+**Key Fields:**
+- `id`: Primary Key (CUID)
+- `industry`: Unique constraint (primary identifier)
+- `salaryRanges`: JSON array
+- `topSkills`: Array of strings
+- `keyTrends`: Array of strings
+- `recommendedSkills`: Array of strings
+
+**Relationships:**
+- One-to-Many: User (via industry field)
 
 ---
 
