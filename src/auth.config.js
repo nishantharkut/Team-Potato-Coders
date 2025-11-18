@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 
 export const authConfig = {
   adapter: PrismaAdapter(db),
+  trustHost: true, // Fix for Vercel deployment
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
